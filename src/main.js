@@ -18,6 +18,8 @@ const defaults = {
 
     showTimeAxis: true,
     timeAxisHeight: 20,
+    tipTimeWidth: 125,
+    tipTimeFormat: '%Y-%m-%d %H:%M:%S',
 };
 
 class TimeseriesMultiChart {
@@ -61,15 +63,16 @@ class TimeseriesMultiChart {
 
         this.xAxisScale = d3.scaleLinear().range([0, width]);
         this.xTimeScale = d3.scaleTime().range([0, width]);
-        this.yAxisScale = d3.scaleLinear().range([height - (this.showTimeAxis ? this.timeAxisHeight : 0), 0]);
+        this.yAxisScales = [];
 
-        this.initDrag();
-        this.initZoom();
+        this.svg.call(this.initDrag());
+        this.svg.call(this.initZoom());
+        this.svg.call(this.initMouseTip());
     }
 
     initZoom() {
         // Zoom chart action
-        const zoom = d3.zoom().on('zoom', () => {
+        return d3.zoom().on('zoom', () => {
             this.currentChartDuration = this.chartDuration * (1 / d3.event.transform.k);
 
             this.chart
@@ -79,12 +82,11 @@ class TimeseriesMultiChart {
 
             this.update();
         });
-        this.svg.call(zoom);
     }
 
-    initDrag() {
+    initDrag(svg) {
         let startX;
-        const drag = d3
+        return d3
             .drag()
             .clickDistance(10)
             .on('start', () => {
@@ -108,7 +110,7 @@ class TimeseriesMultiChart {
                 if (diff < -10 || diff > 10) {
                     startX = d3.event.x;
 
-                    const timeDiff = (this.currentChartDuration / this.width) * diff;
+                    const timeDiff = this.currentChartDuration / this.width * diff;
 
                     this.lastChartTime -= timeDiff;
                     this.lastChartTime = Math.min(this.maxTime + this.currentChartDuration / 5, this.lastChartTime);
@@ -117,11 +119,70 @@ class TimeseriesMultiChart {
                     this.update();
                 }
             });
-
-        this.svg.call(drag);
     }
 
-    renderAxis() {}
+    initMouseTip(svg) {
+        const showTipGroup = () => {
+            if (!this.dragging) {
+                this.tipGroup.style('opacity', '1');
+            }
+        };
+
+        const hideTipGroup = () => {
+            this.tipGroup.style('opacity', '0');
+        };
+
+        return svg =>
+            svg
+                .on('mouseover', () => {
+                    showTipGroup();
+                })
+                .on('mouseout', () => {
+                    hideTipGroup();
+                })
+                .on('mousemove', () => {
+                    const mouse = d3.mouse(svg.node());
+                    const xDate = this.xAxisScale.invert(mouse[0]);
+
+                    // Draw tooltip vertical line
+                    this.tipGroup
+                        .select(`.tipMouseLine`)
+                        .attr('d', () =>
+                            d3.line()([
+                                [mouse[0], this.height - (this.showTimeAxis ? this.timeAxisHeight : 0)],
+                                [mouse[0], 0],
+                            ]),
+                        );
+
+                    let positionX = mouse[0] - this.tipTimeWidth / 2;
+                    positionX = Math.min(positionX, this.width - this.tipTimeWidth);
+                    positionX = Math.max(positionX, 0);
+
+                    this.tipGroup.select('.tipTime').attr('transform', `translate(${positionX}, ${this.height - 20})`);
+
+                    this.tipGroup.select('.tipTimeText').text(d3.timeFormat(this.tipTimeFormat)(xDate));
+
+                    // Move tooltip on lines
+                    this.tipGroup.selectAll(`.dataStreamTip`).each((item, idx, els) => {
+                        const bisect = d3.bisector(([date]) => date).right;
+
+                        const pointIdx = bisect(this.dataStreams[idx].data, xDate);
+                        const yScale = this.yAxisScales[idx];
+
+                        if (this.dataStreams[idx].data[pointIdx]) {
+                            const y = yScale(this.dataStreams[idx].data[pointIdx][1]);
+                            d3.select(els[idx]).attr('transform', `translate(${mouse[0]},${y})`);
+                            const value = parseFloat(Number(this.dataStreams[idx].data[pointIdx][1]).toFixed(1));
+                            d3
+                                .select(els[idx])
+                                .select('.tipText')
+                                .text(value);
+                        } else {
+                            d3.select(els[idx]).attr('transform', `translate(-999,-999)`);
+                        }
+                    });
+                });
+    }
 
     renderTimeAxis() {
         if (!this.showTimeAxis) {
@@ -143,14 +204,34 @@ class TimeseriesMultiChart {
         this.xTimeAxis.call(d3.axisBottom(this.xTimeScale));
     }
 
-    renderLinesAxises() {}
+    renderDataAxises() {
+        let drawCounter = 0;
+        this.chart
+            .selectAll('.dataAxis')
+            .data(this.dataStreams)
+            .join(enter => enter.append('g').attr('class', 'dataAxis'))
+            .each((dataStream, idx, els) => {
+                const axis = els[idx];
+                const yScale = this.yAxisScales[idx];
 
-    renderLines() {
-        const line = d3
-            .line()
-            .x(([time]) => this.xAxisScale(+time))
-            .y(([time, value]) => this.yAxisScale(value));
+                const { color, showAxis = true } = dataStream;
+                if (!showAxis) {
+                    return;
+                }
 
+                drawCounter += 1;
+
+                d3
+                    .select(axis)
+                    .attr('transform', `translate(${drawCounter * 30}, 0)`)
+                    .call(d3.axisLeft(yScale))
+                    .call(axis => axis.select('.domain').remove())
+                    .call(axis => axis.selectAll('line').remove())
+                    .call(axis => axis.selectAll('text').attr('fill', color));
+            });
+    }
+
+    renderDataLines() {
         this.chart
             .selectAll('.dataLine')
             .data(this.dataStreams)
@@ -158,21 +239,77 @@ class TimeseriesMultiChart {
             .each((dataStream, idx, els) => {
                 const path = els[idx];
 
-                const { color, data } = dataStream;
+                const { color, data, strokeWidth = 1 } = dataStream;
 
-                this.yAxisScale.domain(d3.extent(data, d => d[1]));
+                this.yAxisScales[idx] = d3
+                    .scaleLinear()
+                    .range([this.height - (this.showTimeAxis ? this.timeAxisHeight : 0), 0])
+                    .domain(d3.extent(data, d => d[1]));
 
                 const line = d3
                     .line()
                     .x(([time]) => this.xAxisScale(+time))
-                    .y(([time, value]) => this.yAxisScale(value));
+                    .y(([time, value]) => this.yAxisScales[idx](value));
 
-                d3.select(path)
+                d3
+                    .select(path)
                     .datum(data)
                     .attr('d', line)
                     .attr('stroke', color)
+                    .attr('stroke-width', strokeWidth)
                     .attr('fill', 'none');
             });
+    }
+
+    renderLinesTipCircles() {
+        this.tipGroup
+            .selectAll('.dataStreamTip')
+            .data(this.dataStreams)
+            .enter()
+            .append('g')
+            .attr('class', 'dataStreamTip')
+            .call(g =>
+                g
+
+                    .append('circle')
+                    .attr('class', 'tipCircle')
+                    .attr('r', 4)
+                    .style('stroke', d => d.color),
+            )
+            .call(g => g.append('text').attr('class', 'tipText'));
+    }
+
+    renderTipGroup() {
+        if (this.tipGroup) {
+            return;
+        }
+
+        this.tipGroup = this.chart
+            .append('g')
+            .attr('class', 'tipGroup')
+            .style('opacity', '0');
+
+        this.tipGroup
+            .append('path') // this is the black vertical line to follow mouse
+            .attr('class', 'tipMouseLine')
+            .attr('stroke', this.tipStrokeColor)
+            .attr('stroke-width', 2);
+
+        const tipTime = this.tipGroup.append('g').attr('class', 'tipTime');
+        tipTime
+            .append('rect')
+            .attr('class', 'tipTimeRect')
+            .attr('x', 0)
+            .attr('y', 0)
+            .attr('width', this.tipTimeWidth)
+            .attr('height', this.timeAxisHeight)
+            .attr('fill', this.tipStrokeColor);
+
+        tipTime
+            .append('text')
+            .attr('class', 'tipTimeText')
+            .attr('text-anchor', 'middle')
+            .attr('transform', `translate(${this.tipTimeWidth / 2}, ${this.timeAxisHeight / 2})`);
     }
 
     render(dataStreams) {
@@ -196,8 +333,10 @@ class TimeseriesMultiChart {
         this.xAxisScale.domain([this.lastChartTime - this.currentChartDuration, this.lastChartTime]);
 
         this.renderTimeAxis();
-        this.renderLinesAxises();
-        this.renderLines();
+        this.renderDataLines();
+        this.renderDataAxises();
+        this.renderTipGroup();
+        this.renderLinesTipCircles();
     }
 
     update(dataStreams) {
