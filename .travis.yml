@@ -1,6 +1,34 @@
 language: node_js
 node_js:
-  - '11'
-  - '10'
-  - '8'
-  - '6'
+    - '10'
+
+before_script:
+    - yarn
+script:
+    - set -e
+    - yarn run build
+    - yarn link
+    - yarn --cwd ./demo
+    - yarn --cwd ./demo link @avinlab/d3-timeseries-multi-chart
+    - yarn --cwd ./demo run build
+after_success:
+    - git config --global user.email "travis@travis-ci.org"
+    - git config --global user.name "Travis CI"
+    - npm config set git-tag-version=false
+    - NPM_VERSION=$(npm version patch)
+    - git commit -a -m "${NPM_VERSION:1}" -m "[ci skip]"
+    - git remote remove origin
+    - git remote add origin https://${GITHUB_TOKEN}@github.com/avin/d3-timeseries-multi-chart.git
+    - git push origin HEAD:master
+deploy:
+    - provider: npm
+      email: carcinogen75@gmail.com
+      api_key: $NPM_TOKEN
+      skip_cleanup: true
+
+    - provider: pages
+      skip_cleanup: true
+      github_token: $GITHUB_TOKEN
+      local_dir: demo/build
+      on:
+          branch: master
