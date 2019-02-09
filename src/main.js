@@ -169,25 +169,52 @@ class TimeseriesMultiChart {
 
                     this.tipGroup.select('.tipTimeText').text(d3.timeFormat(this.tipTimeFormat)(xDate));
 
-                    // Move tooltip on lines
+                    const tipNodes = [];
+
                     this.tipGroup.selectAll(`.dataStreamTip`).each((item, idx, els) => {
                         const data = this.dataStreams[idx].data;
 
                         const bisect = d3.bisector(([date]) => date).right;
-
                         const bisectPointIdx = bisect(data, xDate);
-
                         const pointIdx = bisectPointIdx - 1;
+
                         if (data[pointIdx]) {
                             const yScale = this.yAxisScales[idx];
-                            const y = Math.round(yScale(data[pointIdx][1]));
+                            const y = yScale(data[pointIdx][1]);
 
-                            d3.select(els[idx]).attr('transform', `translate(${mouse[0]},${y})`);
-                            const value = parseFloat(Number(data[pointIdx][1]).toFixed(1));
+                            tipNodes.push({
+                                idx,
+                                fx: 0,
+                                targetY: y,
+                                value: parseFloat(Number(data[pointIdx][1]).toFixed(1)),
+                                date: data[pointIdx][0],
+                            });
+                        }
+                    });
+
+                    // Calculate optimal non-overlaping label tips positions
+                    const tipHeight = 10;
+                    const force = d3
+                        .forceSimulation()
+                        .nodes(tipNodes)
+                        .force('collide', d3.forceCollide(tipHeight / 2))
+                        .force('y', d3.forceY(d => d.targetY).strength(1))
+                        .stop();
+                    for (let i = 0; i < 300; i++) {
+                        force.tick();
+                    }
+
+                    this.tipGroup.selectAll(`.dataStreamTip`).each((item, idx, els) => {
+                        const tipNode = tipNodes.find(i => i.idx === idx);
+                        if (tipNode) {
+                            const data = this.dataStreams[idx].data;
+
+                            d3.select(els[idx]).attr('transform', `translate(${mouse[0]},${tipNode.y})`);
+
                             d3
                                 .select(els[idx])
                                 .select('.tipText')
-                                .text(value);
+                                .text(tipNode.value);
 
                             d3
                                 .select(els[idx])
@@ -195,7 +222,10 @@ class TimeseriesMultiChart {
                                 .attr('d', () =>
                                     d3.line()([
                                         [-3, 0],
-                                        [Math.min(-3, this.xAxisScale(data[pointIdx][0]) - mouse[0]), 0],
+                                        [
+                                            Math.min(-3, this.xAxisScale(tipNode.date) - mouse[0]),
+                                            tipNode.targetY - tipNode.y,
+                                        ],
                                     ]),
                                 );
                         } else {
