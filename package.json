@@ -21,6 +21,9 @@
         "multi",
         "timeseries"
     ],
+    "publishConfig": {
+        "access": "public"
+    },
     "main": "dist/main.cjs.js",
     "module": "dist/main.esm.js",
     "browser": "dist/main.umd.js",
