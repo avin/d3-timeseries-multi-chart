@@ -46,17 +46,19 @@ svg {
         }
     }
 
-    .timeAxis{
+    .timeAxis {
         pointer-events: none;
         text {
             fill: $dark-gray3;
         }
-        .domain, .tick line{
+        .domain,
+        .tick line {
             stroke: $gray1;
         }
     }
 
-    .tipMouseLine {
+    .tipMouseLine,
+    .tipPointerLine {
         stroke: $gray1;
         stroke-width: 1px;
     }

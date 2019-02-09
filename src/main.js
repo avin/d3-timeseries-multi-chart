@@ -144,6 +144,8 @@ class TimeseriesMultiChart {
                     const mouse = d3.mouse(svg.node());
                     const xDate = this.xAxisScale.invert(mouse[0]);
 
+                    this.mouseVerticalPosition = Math.round(mouse[1] / this.height) ? 'bottom' : 'top';
+
                     // Draw tooltip vertical line
                     this.tipGroup
                         .select(`.tipMouseLine`)
@@ -158,25 +160,44 @@ class TimeseriesMultiChart {
                     positionX = Math.min(positionX, this.width - this.tipTimeWidth);
                     positionX = Math.max(positionX, 0);
 
-                    this.tipGroup.select('.tipTime').attr('transform', `translate(${positionX}, ${this.height - 20})`);
+                    let positionY = this.height - 20;
+                    if (this.mouseVerticalPosition === 'top' && !this.showTimeAxis) {
+                        positionY = 0;
+                    }
+
+                    this.tipGroup.select('.tipTime').attr('transform', `translate(${positionX}, ${positionY})`);
 
                     this.tipGroup.select('.tipTimeText').text(d3.timeFormat(this.tipTimeFormat)(xDate));
 
                     // Move tooltip on lines
                     this.tipGroup.selectAll(`.dataStreamTip`).each((item, idx, els) => {
+                        const data = this.dataStreams[idx].data;
+
                         const bisect = d3.bisector(([date]) => date).right;
 
-                        const pointIdx = bisect(this.dataStreams[idx].data, xDate);
-                        const yScale = this.yAxisScales[idx];
+                        const bisectPointIdx = bisect(data, xDate);
 
-                        if (this.dataStreams[idx].data[pointIdx]) {
-                            const y = yScale(this.dataStreams[idx].data[pointIdx][1]);
+                        const pointIdx = bisectPointIdx - 1;
+                        if (data[pointIdx]) {
+                            const yScale = this.yAxisScales[idx];
+                            const y = yScale(data[pointIdx][1]);
+
                             d3.select(els[idx]).attr('transform', `translate(${mouse[0]},${y})`);
-                            const value = parseFloat(Number(this.dataStreams[idx].data[pointIdx][1]).toFixed(1));
+                            const value = parseFloat(Number(data[pointIdx][1]).toFixed(1));
                             d3
                                 .select(els[idx])
                                 .select('.tipText')
                                 .text(value);
+
+                            d3
+                                .select(els[idx])
+                                .select('.tipPointerLine')
+                                .attr('d', () =>
+                                    d3.line()([
+                                        [-3, 0],
+                                        [Math.min(-3, this.xAxisScale(data[pointIdx][0]) - mouse[0]), 0],
+                                    ]),
+                                );
                         } else {
                             d3.select(els[idx]).attr('transform', `translate(-999,-999)`);
                         }
@@ -253,12 +274,49 @@ class TimeseriesMultiChart {
 
                 d3
                     .select(path)
-                    .datum(data)
+                    .datum(this.filterVisibleDataPoints(data, this.xAxisScale, this.yAxisScales[idx]))
                     .attr('d', line)
                     .attr('stroke', color)
                     .attr('stroke-width', strokeWidth)
                     .attr('fill', 'none');
             });
+    }
+
+    renderDataDots() {
+        this.chart
+            .selectAll('.dataDotsGroup')
+            .data(this.dataStreams)
+            .join(enter => enter.append('g').attr('class', 'dataDotsGroup'))
+            .each((dataStream, idx, els) => {
+                const group = els[idx];
+
+                const { color, data, strokeWidth = 1, showDots = false } = dataStream;
+
+                if (showDots) {
+                    d3
+                        .select(group)
+                        .selectAll('.dataDot')
+                        .data(this.filterVisibleDataPoints(data, this.xAxisScale, this.yAxisScales[idx]))
+                        .join(enter => enter.append('circle').attr('class', 'dataDot'))
+                        .attr('r', strokeWidth * 2)
+                        .attr('fill', color)
+                        .attr('cx', ([time]) => this.xAxisScale(+time))
+                        .attr('cy', ([time, value]) => this.yAxisScales[idx](value));
+                }
+            });
+    }
+
+    filterVisibleDataPoints(data, xScale, yScale, regionMargin = 20) {
+        return data.filter(([time, value]) => {
+            const x = xScale(+time);
+            const y = yScale(value);
+            return (
+                x > -regionMargin &&
+                x < this.width + regionMargin &&
+                y > -regionMargin &&
+                y < this.height + regionMargin
+            );
+        });
     }
 
     renderLinesTipCircles() {
@@ -276,6 +334,7 @@ class TimeseriesMultiChart {
                     .attr('r', 4)
                     .style('stroke', d => d.color),
             )
+            .call(g => g.append('path').attr('class', 'tipPointerLine'))
             .call(g => g.append('text').attr('class', 'tipText'));
     }
 
@@ -334,6 +393,7 @@ class TimeseriesMultiChart {
 
         this.renderTimeAxis();
         this.renderDataLines();
+        this.renderDataDots();
         this.renderDataAxises();
         this.renderTipGroup();
         this.renderLinesTipCircles();
