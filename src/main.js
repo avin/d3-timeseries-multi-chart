@@ -48,7 +48,7 @@ class TimeseriesMultiChart {
     }
 
     init() {
-        const { target, width, height, margin } = this;
+        const { target, width, height } = this;
 
         this.svg = d3.select(target).append('svg');
 
@@ -82,7 +82,7 @@ class TimeseriesMultiChart {
         this.svg.call(zoomAction);
     }
 
-    initDrag(svg) {
+    initDrag() {
         let startX;
         const dragAction = d3
             .drag()
@@ -121,7 +121,7 @@ class TimeseriesMultiChart {
         this.svg.call(dragAction);
     }
 
-    initMouseTip(svg) {
+    initMouseTip() {
         const showTipGroup = () => {
             if (!this.dragging) {
                 this.tipGroup.style('opacity', '1');
@@ -171,8 +171,8 @@ class TimeseriesMultiChart {
 
                     const tipNodes = [];
 
-                    this.tipGroup.selectAll(`.dataStreamTip`).each((item, idx, els) => {
-                        const data = this.dataStreams[idx].data;
+                    this.tipGroup.selectAll(`.dataStreamTip`).each((item, idx) => {
+                        const { data } = this.dataStreams[idx];
 
                         const bisect = d3.bisector(([date]) => date).right;
                         const bisectPointIdx = bisect(data, xDate);
@@ -200,15 +200,13 @@ class TimeseriesMultiChart {
                         .force('collide', d3.forceCollide(tipHeight / 2))
                         .force('y', d3.forceY(d => d.targetY).strength(1))
                         .stop();
-                    for (let i = 0; i < 300; i++) {
+                    for (let i = 0; i < 300; i += 1) {
                         force.tick();
                     }
 
                     this.tipGroup.selectAll(`.dataStreamTip`).each((item, idx, els) => {
                         const tipNode = tipNodes.find(i => i.idx === idx);
                         if (tipNode) {
-                            const data = this.dataStreams[idx].data;
-
                             d3.select(els[idx]).attr('transform', `translate(${mouse[0]},${tipNode.y})`);
 
                             d3
@@ -302,7 +300,7 @@ class TimeseriesMultiChart {
                 const line = d3
                     .line()
                     .x(([time]) => this.xAxisScale(+time))
-                    .y(([time, value]) => this.yAxisScales[idx](value));
+                    .y(([, value]) => this.yAxisScales[idx](value));
 
                 d3
                     .select(path)
@@ -333,7 +331,7 @@ class TimeseriesMultiChart {
                         .attr('r', strokeWidth * 2)
                         .attr('fill', color)
                         .attr('cx', ([time]) => this.xAxisScale(+time))
-                        .attr('cy', ([time, value]) => this.yAxisScales[idx](value));
+                        .attr('cy', ([, value]) => this.yAxisScales[idx](value));
                 }
             });
     }
