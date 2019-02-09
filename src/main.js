@@ -10,15 +10,22 @@ const defaults = {
     // height of chart
     height: 300,
 
-    // Default chart duration
+    // default chart duration
     chartDuration: 3600 * 1000, // 1 hour
 
     // margin
     margin: { top: 5, right: 20, bottom: 5, left: 20 },
 
+    // Show time axis
     showTimeAxis: true,
+
+    // height of time axis
     timeAxisHeight: 20,
+
+    // width of time label of the tip line
     tipTimeWidth: 125,
+
+    // tip line time's format
     tipTimeFormat: '%Y-%m-%d %H:%M:%S',
 };
 
@@ -40,17 +47,6 @@ class TimeseriesMultiChart {
         Object.assign(this, defaults, config);
     }
 
-    /**
-     * Dimensions without margin.
-     * @returns {number[]}
-     */
-    dimensions() {
-        const { width, height, margin } = this;
-        const w = width - margin.left - margin.right;
-        const h = height - margin.top - margin.bottom;
-        return [w, h];
-    }
-
     init() {
         const { target, width, height, margin } = this;
 
@@ -65,14 +61,14 @@ class TimeseriesMultiChart {
         this.xTimeScale = d3.scaleTime().range([0, width]);
         this.yAxisScales = [];
 
-        this.svg.call(this.initDrag());
-        this.svg.call(this.initZoom());
-        this.svg.call(this.initMouseTip());
+        this.initDrag();
+        this.initZoom();
+        this.initMouseTip();
     }
 
     initZoom() {
         // Zoom chart action
-        return d3.zoom().on('zoom', () => {
+        const zoomAction = d3.zoom().on('zoom', () => {
             this.currentChartDuration = this.chartDuration * (1 / d3.event.transform.k);
 
             this.chart
@@ -82,11 +78,13 @@ class TimeseriesMultiChart {
 
             this.update();
         });
+
+        this.svg.call(zoomAction);
     }
 
     initDrag(svg) {
         let startX;
-        return d3
+        const dragAction = d3
             .drag()
             .clickDistance(10)
             .on('start', () => {
@@ -119,6 +117,8 @@ class TimeseriesMultiChart {
                     this.update();
                 }
             });
+
+        this.svg.call(dragAction);
     }
 
     initMouseTip(svg) {
@@ -132,7 +132,7 @@ class TimeseriesMultiChart {
             this.tipGroup.style('opacity', '0');
         };
 
-        return svg =>
+        const mouseTipAction = svg =>
             svg
                 .on('mouseover', () => {
                     showTipGroup();
@@ -180,7 +180,7 @@ class TimeseriesMultiChart {
                         const pointIdx = bisectPointIdx - 1;
                         if (data[pointIdx]) {
                             const yScale = this.yAxisScales[idx];
-                            const y = yScale(data[pointIdx][1]);
+                            const y = Math.round(yScale(data[pointIdx][1]));
 
                             d3.select(els[idx]).attr('transform', `translate(${mouse[0]},${y})`);
                             const value = parseFloat(Number(data[pointIdx][1]).toFixed(1));
@@ -203,6 +203,8 @@ class TimeseriesMultiChart {
                         }
                     });
                 });
+
+        this.svg.call(mouseTipAction);
     }
 
     renderTimeAxis() {
@@ -319,56 +321,54 @@ class TimeseriesMultiChart {
         });
     }
 
-    renderLinesTipCircles() {
-        this.tipGroup
-            .selectAll('.dataStreamTip')
-            .data(this.dataStreams)
-            .enter()
-            .append('g')
-            .attr('class', 'dataStreamTip')
-            .call(g =>
-                g
-
-                    .append('circle')
-                    .attr('class', 'tipCircle')
-                    .attr('r', 4)
-                    .style('stroke', d => d.color),
-            )
-            .call(g => g.append('path').attr('class', 'tipPointerLine'))
-            .call(g => g.append('text').attr('class', 'tipText'));
-    }
-
     renderTipGroup() {
-        if (this.tipGroup) {
-            return;
+        // Render only first time
+        if (!this.tipGroup) {
+            this.tipGroup = this.chart
+                .append('g')
+                .attr('class', 'tipGroup')
+                .style('opacity', '0');
+
+            this.tipGroup
+                .append('path') // this is the black vertical line to follow mouse
+                .attr('class', 'tipMouseLine')
+                .attr('stroke', this.tipStrokeColor)
+                .attr('stroke-width', 2);
+
+            this.tipGroup
+                .selectAll('.dataStreamTip')
+                .data(this.dataStreams)
+                .enter()
+                .append('g')
+                .attr('class', 'dataStreamTip')
+                .call(g => g.append('path').attr('class', 'tipPointerLine'))
+                .call(g =>
+                    g
+
+                        .append('circle')
+                        .attr('class', 'tipCircle')
+                        .attr('r', 4)
+                        .style('stroke', d => d.color),
+                )
+                .call(g => g.append('text').attr('class', 'tipText'));
+
+            const tipTime = this.tipGroup.append('g').attr('class', 'tipTime');
+
+            tipTime
+                .append('rect')
+                .attr('class', 'tipTimeRect')
+                .attr('x', 0)
+                .attr('y', 0)
+                .attr('width', this.tipTimeWidth)
+                .attr('height', this.timeAxisHeight)
+                .attr('fill', this.tipStrokeColor);
+
+            tipTime
+                .append('text')
+                .attr('class', 'tipTimeText')
+                .attr('text-anchor', 'middle')
+                .attr('transform', `translate(${this.tipTimeWidth / 2}, ${this.timeAxisHeight / 2})`);
         }
-
-        this.tipGroup = this.chart
-            .append('g')
-            .attr('class', 'tipGroup')
-            .style('opacity', '0');
-
-        this.tipGroup
-            .append('path') // this is the black vertical line to follow mouse
-            .attr('class', 'tipMouseLine')
-            .attr('stroke', this.tipStrokeColor)
-            .attr('stroke-width', 2);
-
-        const tipTime = this.tipGroup.append('g').attr('class', 'tipTime');
-        tipTime
-            .append('rect')
-            .attr('class', 'tipTimeRect')
-            .attr('x', 0)
-            .attr('y', 0)
-            .attr('width', this.tipTimeWidth)
-            .attr('height', this.timeAxisHeight)
-            .attr('fill', this.tipStrokeColor);
-
-        tipTime
-            .append('text')
-            .attr('class', 'tipTimeText')
-            .attr('text-anchor', 'middle')
-            .attr('transform', `translate(${this.tipTimeWidth / 2}, ${this.timeAxisHeight / 2})`);
     }
 
     render(dataStreams) {
@@ -396,7 +396,6 @@ class TimeseriesMultiChart {
         this.renderDataDots();
         this.renderDataAxises();
         this.renderTipGroup();
-        this.renderLinesTipCircles();
     }
 
     update(dataStreams) {
