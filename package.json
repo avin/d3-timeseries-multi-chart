@@ -1,9 +1,11 @@
 {
     "name": "@avinlab/d3-timeseries-multi-chart",
-    "version": "0.1.0",
+    "version": "0.1.1",
     "description": "Chart for timeseries data",
     "author": "Avin Grape <carcinogen75@gmail.com> (https://github.com/avin/)",
-    "contributors": ["Avin Grape <carcinogen75@gmail.com> (https://github.com/avin/)"],
+    "contributors": [
+        "Avin Grape <carcinogen75@gmail.com> (https://github.com/avin/)"
+    ],
     "license": "MIT",
     "homepage": "https://github.com/avin/d3-timeseries-multi-chart",
     "repository": {
@@ -13,7 +15,12 @@
     "bugs": {
         "url": "https://github.com/avin/d3-timeseries-multi-chart/issues"
     },
-    "keywords": ["d3", "chart", "multi", "timeseries"],
+    "keywords": [
+        "d3",
+        "chart",
+        "multi",
+        "timeseries"
+    ],
     "main": "dist/main.cjs.js",
     "module": "dist/main.esm.js",
     "browser": "dist/main.umd.js",
@@ -45,7 +52,9 @@
         "demo:build": "cd demo && yarn run build",
         "demo:run": "cd demo && yarn run start"
     },
-    "files": ["dist"],
+    "files": [
+        "dist"
+    ],
     "husky": {
         "hooks": {
             "pre-commit": "lint-staged"
@@ -53,7 +62,10 @@
     },
     "lint-staged": {
         "linters": {
-            "src/**/*.{js,json,css,md}": ["prettier-eslint --write", "git add"],
+            "src/**/*.{js,json,css,md}": [
+                "prettier-eslint --write",
+                "git add"
+            ],
             "src/**/*.js": "eslint --max-warnings 0"
         },
         "concurrent": false
