@@ -5,7 +5,6 @@
 
     :global{
         svg {
-            pointer-events: all;
 
             .chartLine {
                 fill: none;
@@ -13,7 +12,6 @@
             }
 
             .dataAxis {
-                pointer-events: none;
                 text {
                     paint-order: stroke;
                     stroke: $dark-gray3;
@@ -25,7 +23,6 @@
             }
 
             .timeAxis {
-                pointer-events: none;
                 text {
                     fill: $dark-gray3;
                 }
