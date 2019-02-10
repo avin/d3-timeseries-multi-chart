@@ -13,7 +13,6 @@
                 text {
                     paint-order: stroke;
                     stroke: $light-gray5;
-                    font-size: 12px;
                     stroke-width: 3px;
                     stroke-linecap: butt;
                     stroke-linejoin: miter;
@@ -44,7 +43,6 @@
 
             .tipText {
                 transform: translate(8px, 4px);
-                font-size: 12px;
                 fill: $light-gray5;
 
                 paint-order: stroke;
@@ -56,7 +54,6 @@
             }
 
             .tipTime {
-                font-size: 12px;
             }
 
             .tipTimeRect {
@@ -65,7 +62,6 @@
 
             .tipTimeText {
                 fill: white;
-                alignment-baseline: central;
             }
         }
 

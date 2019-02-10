@@ -46,7 +46,6 @@
 
             .tipText {
                 transform: translate(6px, 4px);
-                font-size: 12px;
                 fill: $light-gray5;
 
                 paint-order: stroke;
@@ -58,7 +57,6 @@
             }
 
             .tipTime {
-                font-size: 13px;
             }
 
             .tipTimeRect {
@@ -67,7 +65,6 @@
 
             .tipTimeText {
                 fill: $dark-gray3;
-                alignment-baseline: central;
             }
         }
 

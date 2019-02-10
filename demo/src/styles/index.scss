@@ -1,4 +1,10 @@
+@import '~normalize.css/normalize.css';
 @import './variables.scss';
+
+html {
+    font-family: 'Roboto', sans-serif;
+    font-size: 12px;
+}
 
 .chartContainer {
     border: 1px solid $gray1;
@@ -7,8 +13,13 @@
     box-shadow: 1px 1px 5px $gray5;
 }
 
-svg{
-    text{
+svg {
+    text {
         pointer-events: none;
     }
+}
+
+.tipTimeText {
+    alignment-baseline: middle;
+    dominant-baseline: middle;
 }
