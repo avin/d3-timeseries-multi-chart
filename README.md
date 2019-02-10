@@ -79,8 +79,10 @@ chart.render([
 * `showAxis` _(Boolean)_ - Show Y axis for current dataStream.
 * `strokeWidth` _(Number)_ - Stroke width of data line.
 * `showDots` _(Boolean)_ - Show data points on data line.
-* `type` _(String)_ - Type of data line (line|area|bar).
+* `dotsRadius` _(Number)_ - Data points radius (default: x2 of strokeWidth).
+* `type` _(String)_ - Type of data line (`line`|`area`|`bar`).
 * `areaFillOpacity` _(Number)_ - Opacity factor for color filling of area data line type.
+* `curve` _(String)_ - Data line curve type (`linear`|`stepAfter`|`stepBefore`|`monotoneX`).
 
 ## License
 

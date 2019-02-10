@@ -21,19 +21,28 @@ export default class Chart4 extends React.Component {
         });
         this.chart.render([
             {
-                label: 'Data 2',
+                label: 'Data 1',
                 color: '#1F4B99',
                 data: generateData(Math.PI / 2),
                 showAxis: true,
                 showDots: true,
             },
             {
-                label: 'Data 3',
+                label: 'Data 2',
                 color: '#9BBF30',
                 data: generateData(Math.PI),
                 showAxis: true,
                 type: 'area',
                 areaFillOpacity: 0.3,
+            },
+            {
+                label: 'Data 3',
+                color: '#F5498B',
+                data: generateData(0),
+                type: 'bar',
+                showDots: true,
+                strokeWidth: 2,
+                dotsRadius: 2.5
             },
         ]);
     }
