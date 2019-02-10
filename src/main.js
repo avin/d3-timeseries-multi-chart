@@ -73,7 +73,17 @@ class TimeseriesMultiChart {
             .attr('width', width)
             .attr('height', height)
             .append('g')
-            .attr('transform', `translate(${this.commonDataAxis ? this.commonDataAxisWidth : 0}, 0)`);
+            .attr('transform', `translate(${this.commonDataAxis ? this.commonDataAxisWidth : 0}, 0)`)
+            .style('pointer-events', 'all');
+
+        // Mouse event catcher
+        this.chart
+            .append('rect')
+            .attr('fill', 'none')
+            .attr('x', 0)
+            .attr('y', 0)
+            .attr('width', chartWidth)
+            .attr('height', chartHeight);
 
         this.chart
             .append('clipPath')
@@ -136,7 +146,7 @@ class TimeseriesMultiChart {
                 if (diff < -10 || diff > 10) {
                     startX = d3.event.x;
 
-                    const timeDiff = (this.currentChartDuration / this.chartWidth) * diff;
+                    const timeDiff = this.currentChartDuration / this.chartWidth * diff;
 
                     this.lastChartTime -= timeDiff;
                     this.lastChartTime = Math.min(this.maxTime + this.currentChartDuration / 5, this.lastChartTime);
@@ -150,124 +160,119 @@ class TimeseriesMultiChart {
     }
 
     initMouseTip() {
-        const showTipGroup = () => {
+        this.showTipGroup = () => {
             if (!this.dragging) {
                 this.tipGroup.style('opacity', '1');
             }
         };
 
-        const hideTipGroup = () => {
+        this.hideTipGroup = () => {
             this.tipGroup.style('opacity', '0');
         };
 
-        const mouseTipAction = svg =>
-            svg
-                .on('mouseover', () => {
-                    showTipGroup();
-                })
-                .on('mouseout', () => {
-                    hideTipGroup();
-                })
-                .on('mousemove', () => {
-                    const mouse = d3.mouse(svg.node());
-                    const mouseX = mouse[0] - (this.commonDataAxis ? this.commonDataAxisWidth : 0);
+        this.chart
+            .on('mouseover', () => {
+                this.showTipGroup();
+            })
+            .on('mouseleave', () => {
+                this.hideTipGroup();
+            })
+            .on('mousemove', () => {
+                [this.mouseX, this.mouseY] = d3.mouse(this.chart.node());
 
-                    // Never show tipGroup on common dataAxis
-                    if (mouseX < 0) {
-                        hideTipGroup();
-                        return;
-                    }
-                    showTipGroup();
+                this.handleMouseOver();
+            });
+    }
 
-                    const xDate = this.xAxisScale.invert(mouseX);
+    handleMouseOver() {
+        const { mouseX, mouseY } = this;
 
-                    this.mouseVerticalPosition = Math.round(mouse[1] / this.height) ? 'bottom' : 'top';
+        if (mouseX === undefined) {
+            return;
+        }
 
-                    // Draw tooltip vertical line
-                    this.tipGroup
-                        .select(`.tipMouseLine`)
-                        .attr('d', () =>
-                            d3.line()([
-                                [mouseX, this.height - (this.showTimeAxis ? this.timeAxisHeight : 0)],
-                                [mouseX, 0],
-                            ]),
-                        );
+        const xDate = this.xAxisScale.invert(mouseX);
 
-                    let positionX = mouseX - this.tipTimeWidth / 2;
-                    positionX = Math.min(positionX, this.chartWidth - this.tipTimeWidth);
-                    positionX = Math.max(positionX, 0 - (this.commonDataAxis ? this.commonDataAxisWidth : 0));
+        this.mouseVerticalPosition = Math.round(mouseY / this.height) ? 'bottom' : 'top';
 
-                    let positionY = this.height - this.timeAxisHeight;
-                    if (this.mouseVerticalPosition === 'top' && !this.showTimeAxis) {
-                        positionY = 0;
-                    }
+        // Draw tooltip vertical line
+        this.tipGroup
+            .select(`.tipMouseLine`)
+            .attr('d', () =>
+                d3.line()([[mouseX, this.height - (this.showTimeAxis ? this.timeAxisHeight : 0)], [mouseX, 0]]),
+            );
 
-                    this.tipGroup.select('.tipTime').attr('transform', `translate(${positionX}, ${positionY})`);
+        let positionX = mouseX - this.tipTimeWidth / 2;
+        positionX = Math.min(positionX, this.chartWidth - this.tipTimeWidth);
+        positionX = Math.max(positionX, 0 - (this.commonDataAxis ? this.commonDataAxisWidth : 0));
 
-                    this.tipGroup.select('.tipTimeText').text(d3.timeFormat(this.tipTimeFormat)(xDate));
+        let positionY = this.height - this.timeAxisHeight;
+        if (this.mouseVerticalPosition === 'top' && !this.showTimeAxis) {
+            positionY = 0;
+        }
 
-                    const tipNodes = [];
+        this.tipGroup.select('.tipTime').attr('transform', `translate(${positionX}, ${positionY})`);
 
-                    this.tipGroup.selectAll(`.dataStreamTip`).each((item, idx) => {
-                        const { data } = this.dataStreams[idx];
-                        const yAxisScale = this.commonDataAxis ? this.commonYAxisScale : this.yAxisScales[idx];
+        this.tipGroup.select('.tipTimeText').text(d3.timeFormat(this.tipTimeFormat)(xDate));
 
-                        const bisect = d3.bisector(([date]) => date).right;
-                        const bisectPointIdx = bisect(data, xDate);
-                        const pointIdx = bisectPointIdx - 1;
+        const tipNodes = [];
 
-                        if (data[pointIdx]) {
-                            const y = yAxisScale(data[pointIdx][1]);
+        this.tipGroup.selectAll(`.dataStreamTip`).each((item, idx) => {
+            const { data } = this.dataStreams[idx];
+            const yAxisScale = this.commonDataAxis ? this.commonYAxisScale : this.yAxisScales[idx];
 
-                            tipNodes.push({
-                                idx,
-                                fx: 0,
-                                targetY: y,
-                                value: parseFloat(Number(data[pointIdx][1]).toFixed(1)),
-                                date: data[pointIdx][0],
-                            });
-                        }
-                    });
+            const bisect = d3.bisector(([date]) => date).right;
+            const bisectPointIdx = bisect(data, xDate);
+            const pointIdx = bisectPointIdx - 1;
 
-                    // Calculate optimal non-overlaping label tips positions
-                    const tipHeight = 10;
-                    const force = d3
-                        .forceSimulation()
-                        .nodes(tipNodes)
-                        .force('collide', d3.forceCollide(tipHeight / 2))
-                        .force('y', d3.forceY(d => d.targetY).strength(1))
-                        .stop();
-                    for (let i = 0; i < 300; i += 1) {
-                        force.tick();
-                    }
+            if (data[pointIdx]) {
+                const y = yAxisScale(data[pointIdx][1]);
 
-                    this.tipGroup.selectAll(`.dataStreamTip`).each((item, idx, els) => {
-                        const tipNode = tipNodes.find(i => i.idx === idx);
-                        if (tipNode) {
-                            d3.select(els[idx]).attr('transform', `translate(${mouseX},${tipNode.y})`);
-
-                            d3.select(els[idx])
-                                .select('.tipText')
-                                .text(tipNode.value);
-
-                            d3.select(els[idx])
-                                .select('.tipPointerLine')
-                                .attr('d', () =>
-                                    d3.line()([
-                                        [-3, 0],
-                                        [
-                                            Math.min(-3, this.xAxisScale(tipNode.date) - mouseX),
-                                            tipNode.targetY - tipNode.y,
-                                        ],
-                                    ]),
-                                );
-                        } else {
-                            d3.select(els[idx]).attr('transform', `translate(-999,-999)`);
-                        }
-                    });
+                tipNodes.push({
+                    idx,
+                    fx: 0,
+                    targetY: y,
+                    value: parseFloat(Number(data[pointIdx][1]).toFixed(1)),
+                    date: data[pointIdx][0],
                 });
+            }
+        });
 
-        this.svg.call(mouseTipAction);
+        // Calculate optimal non-overlaping label tips positions
+        const tipHeight = 10;
+        const force = d3
+            .forceSimulation()
+            .nodes(tipNodes)
+            .force('collide', d3.forceCollide(tipHeight / 2))
+            .force('y', d3.forceY(d => d.targetY).strength(1))
+            .stop();
+        for (let i = 0; i < 300; i += 1) {
+            force.tick();
+        }
+
+        this.tipGroup.selectAll(`.dataStreamTip`).each((item, idx, els) => {
+            const tipNode = tipNodes.find(i => i.idx === idx);
+            if (tipNode) {
+                d3.select(els[idx]).attr('transform', `translate(${mouseX},${tipNode.y})`);
+
+                d3
+                    .select(els[idx])
+                    .select('.tipText')
+                    .text(tipNode.value);
+
+                d3
+                    .select(els[idx])
+                    .select('.tipPointerLine')
+                    .attr('d', () =>
+                        d3.line()([
+                            [-3, 0],
+                            [Math.min(-3, this.xAxisScale(tipNode.date) - mouseX), tipNode.targetY - tipNode.y],
+                        ]),
+                    );
+            } else {
+                d3.select(els[idx]).attr('transform', `translate(-999,-999)`);
+            }
+        });
     }
 
     renderTimeAxis() {
@@ -315,7 +320,8 @@ class TimeseriesMultiChart {
 
                     drawCounter += 1;
 
-                    d3.select(axis)
+                    d3
+                        .select(axis)
                         .attr('transform', `translate(${drawCounter * 30}, 0)`)
                         .call(d3.axisLeft(yScale))
                         .call(axis => axis.select('.domain').remove())
@@ -405,7 +411,8 @@ class TimeseriesMultiChart {
                             path = container.append('path');
                         }
 
-                        path.datum(this.filterVisibleDataPoints(data, this.xAxisScale))
+                        path
+                            .datum(this.filterVisibleDataPoints(data, this.xAxisScale))
                             .attr('d', line)
                             .attr('stroke', color)
                             .attr('stroke-width', strokeWidth)
@@ -424,7 +431,8 @@ class TimeseriesMultiChart {
                             path = container.append('path');
                         }
 
-                        path.datum(this.filterVisibleDataPoints(data, this.xAxisScale))
+                        path
+                            .datum(this.filterVisibleDataPoints(data, this.xAxisScale))
                             .attr('d', area)
                             .attr('stroke', color)
                             .attr('stroke-width', strokeWidth)
@@ -472,7 +480,8 @@ class TimeseriesMultiChart {
                 const dotsRadius = dataStream.dotsRadius || strokeWidth * 2;
 
                 if (showDots) {
-                    d3.select(group)
+                    d3
+                        .select(group)
                         .selectAll('.dataDot')
                         .data(this.filterVisibleDataPoints(data, this.xAxisScale))
                         .join(enter => enter.append('circle').attr('class', 'dataDot'))
@@ -566,6 +575,8 @@ class TimeseriesMultiChart {
         this.renderDataDots();
         this.renderDataAxises();
         this.renderTipGroup();
+
+        this.handleMouseOver();
     }
 
     update(dataStreams) {
