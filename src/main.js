@@ -22,6 +22,9 @@ const defaults = {
     // Width of common data axis
     commonDataAxisWidth: 30,
 
+    // Data lines padding factor (less is more)
+    chartPaddingFactor: 30,
+
     // Auto scale data points of visible part
     autoScale: false,
 
@@ -133,7 +136,7 @@ class TimeseriesMultiChart {
                 if (diff < -10 || diff > 10) {
                     startX = d3.event.x;
 
-                    const timeDiff = this.currentChartDuration / this.chartWidth * diff;
+                    const timeDiff = (this.currentChartDuration / this.chartWidth) * diff;
 
                     this.lastChartTime -= timeDiff;
                     this.lastChartTime = Math.min(this.maxTime + this.currentChartDuration / 5, this.lastChartTime);
@@ -194,7 +197,7 @@ class TimeseriesMultiChart {
                     positionX = Math.min(positionX, this.chartWidth - this.tipTimeWidth);
                     positionX = Math.max(positionX, 0 - (this.commonDataAxis ? this.commonDataAxisWidth : 0));
 
-                    let positionY = this.height - 20;
+                    let positionY = this.height - this.timeAxisHeight;
                     if (this.mouseVerticalPosition === 'top' && !this.showTimeAxis) {
                         positionY = 0;
                     }
@@ -243,13 +246,11 @@ class TimeseriesMultiChart {
                         if (tipNode) {
                             d3.select(els[idx]).attr('transform', `translate(${mouseX},${tipNode.y})`);
 
-                            d3
-                                .select(els[idx])
+                            d3.select(els[idx])
                                 .select('.tipText')
                                 .text(tipNode.value);
 
-                            d3
-                                .select(els[idx])
+                            d3.select(els[idx])
                                 .select('.tipPointerLine')
                                 .attr('d', () =>
                                     d3.line()([
@@ -314,8 +315,7 @@ class TimeseriesMultiChart {
 
                     drawCounter += 1;
 
-                    d3
-                        .select(axis)
+                    d3.select(axis)
                         .attr('transform', `translate(${drawCounter * 30}, 0)`)
                         .call(d3.axisLeft(yScale))
                         .call(axis => axis.select('.domain').remove())
@@ -338,14 +338,16 @@ class TimeseriesMultiChart {
             }
 
             const extent = d3.extent(scalingData, d => d[1]);
+            const extentPadding = (extent[1] - extent[0]) / this.chartPaddingFactor;
             this.yAxisScales[idx] = d3
                 .scaleLinear()
-                .range([this.height - (this.showTimeAxis ? this.timeAxisHeight : 0), 0])
-                .domain(extent);
+                .range([this.chartHeight, 0])
+                .domain([extent[0] - extentPadding, extent[1] + extentPadding]);
             commonMinValue = Math.min(commonMinValue, extent[0]);
             commonMaxValue = Math.max(commonMaxValue, extent[1]);
         });
-        this.commonYAxisScale.domain([commonMinValue, commonMaxValue]);
+        const extentPadding = (commonMaxValue - commonMinValue) / this.chartPaddingFactor;
+        this.commonYAxisScale.domain([commonMinValue - extentPadding, commonMaxValue + extentPadding]);
 
         this.chart
             .selectAll('.dataLine')
@@ -403,8 +405,7 @@ class TimeseriesMultiChart {
                             path = container.append('path');
                         }
 
-                        path
-                            .datum(this.filterVisibleDataPoints(data, this.xAxisScale))
+                        path.datum(this.filterVisibleDataPoints(data, this.xAxisScale))
                             .attr('d', line)
                             .attr('stroke', color)
                             .attr('stroke-width', strokeWidth)
@@ -415,7 +416,7 @@ class TimeseriesMultiChart {
                         const area = d3
                             .area()
                             .x(([time]) => this.xAxisScale(+time))
-                            .y0(() => yAxisScale(d3.min(data, ([, value]) => value)))
+                            .y0(() => yAxisScale(yAxisScale.domain()[0]))
                             .y1(([, value]) => yAxisScale(value));
 
                         let path = container.select('path');
@@ -423,8 +424,7 @@ class TimeseriesMultiChart {
                             path = container.append('path');
                         }
 
-                        path
-                            .datum(this.filterVisibleDataPoints(data, this.xAxisScale))
+                        path.datum(this.filterVisibleDataPoints(data, this.xAxisScale))
                             .attr('d', area)
                             .attr('stroke', color)
                             .attr('stroke-width', strokeWidth)
@@ -472,8 +472,7 @@ class TimeseriesMultiChart {
                 const dotsRadius = dataStream.dotsRadius || strokeWidth * 2;
 
                 if (showDots) {
-                    d3
-                        .select(group)
+                    d3.select(group)
                         .selectAll('.dataDot')
                         .data(this.filterVisibleDataPoints(data, this.xAxisScale))
                         .join(enter => enter.append('circle').attr('class', 'dataDot'))

@@ -62,16 +62,18 @@ chart.render([
 
 ### Chart options
 
-* `target` _(String)_ - Interval function. Params: `counter` - call action index number.
-* `width` _(Number)_ - width of chart.
-* `height` _(Number)_ - height of chart.
-* `chartDuration` _(Number)_ - default chart duration.
+* `target` _(String|Element)_ - target element to mount chart svg (default: `#chart`).
+* `width` _(Number)_ - width of chart (default: 500).
+* `height` _(Number)_ - height of chart (default: 300).
+* `chartDuration` _(Number)_ - default chart duration (default: `3600000` (1hour)).
 * `showTimeAxis` _(Boolean)_ - show time axis.
-* `timeAxisHeight` _(Number)_ - time axis height.
-* `tipTimeWidth` _(Number)_ - tip time width.
-* `tipTimeFormat` _(String)_ - tip time dateTime format string.
+* `timeAxisHeight` _(Number)_ - time axis height (default: `20`).
+* `tipTimeWidth` _(Number)_ - tip time width (default: `125`).
+* `tipTimeFormat` _(String)_ - tip time dateTime format string (default: `%Y-%m-%d %H:%M:%S`).
 * `commonDataAxis` _(Boolean)_ - common axis for data lines.
+* `commonDataAxisWidth` _(Number)_ - width of common data axis (default: `30`).
 * `autoScale` _(Boolean)_ - auto scale data points of visible part.
+* `chartPaddingFactor` _(Number)_ - data lines padding factor : 1/N of chart height (less is more) (default: `30`).
 
 ### Chart data item options
 
