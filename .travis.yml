@@ -1,34 +1,34 @@
 language: node_js
 node_js:
-    - '10'
-
+- '10'
 before_script:
-    - yarn
+- yarn
 script:
-    - set -e
-    - yarn run build
-    - yarn link
-    - yarn --cwd ./demo
-    - yarn --cwd ./demo link @avinlab/d3-timeseries-multi-chart
-    - yarn --cwd ./demo run build
+- set -e
+- yarn run build
+- yarn link
+- yarn --cwd ./demo
+- yarn --cwd ./demo link @avinlab/d3-timeseries-multi-chart
+- yarn --cwd ./demo run build
 after_success:
-    - git config --global user.email "travis@travis-ci.org"
-    - git config --global user.name "Travis CI"
-    - npm config set git-tag-version=false
-    - NPM_VERSION=$(npm version patch)
-    - git commit -a -m "${NPM_VERSION:1}" -m "[ci skip]"
-    - git remote remove origin
-    - git remote add origin https://${GITHUB_TOKEN}@github.com/avin/d3-timeseries-multi-chart.git
-    - git push origin HEAD:master
+- git config --global user.email "travis@travis-ci.org"
+- git config --global user.name "Travis CI"
+- npm config set git-tag-version=false
+- NPM_VERSION=$(npm version patch)
+- git commit -a -m "${NPM_VERSION:1}" -m "[ci skip]"
+- git remote remove origin
+- git remote add origin https://${GITHUB_TOKEN}@github.com/avin/d3-timeseries-multi-chart.git
+- git push origin HEAD:master
 deploy:
-    - provider: npm
-      email: carcinogen75@gmail.com
-      api_key: $NPM_TOKEN
-      skip_cleanup: true
-
-    - provider: pages
-      skip_cleanup: true
-      github_token: $GITHUB_TOKEN
-      local_dir: demo/build
-      on:
-          branch: master
+  - provider: npm
+    email: carcinogen75@gmail.com
+    api_key:
+      secure: jSg/3gGbQSrd95R1qKOGJQjlxXHgPz7N2plQQyxBlYjpxEv4aARAp40mzMDBt0pWuYJ6Iu+dDa9zlGpyiRL/JofdEmr04cGlT/r+EgnAp8o/CCA2KkVCC3BoUHegW4g2TfkpF3mcRPLwH897+IgCB+rKaCUpKJGTSIM7OqcFWvz6Gfvfl9ZsHhc/MXhX/Y8tN9m9mpiiM5VSF+eqOS1OGeLCxWm071xHOhK/HINZVsZXwREJRCyrf4BP9pIFeekcbSGw+X95PUsR83oDekQKdYvnQ6kBz2Db9FxfSajRaF6m8zkvZyK+wqsR87znawYEpWNcalvvkisfKv1jrPbDDl+IGcM92OQ4cDV96XqcHQIOelwzttCEqyr9R38ido2NW/ZiktmeWlf6WJ2HPNZEGkxTM0bYyNQRr1fPNLQ2r9uOhHFaprgOh5cJKv1OS0rZCQDv55pLPhwGjOXiYOcsMBFXLfp2Q+2dfX5oI9dGLnCgrLYh6JElA0mq3AHsT+kiqW/Usa9HCgvmkXpBE7WmBfmkoI+3MPrmPB4RDl3ss6trAqGGSdYX6AuttYMTIAdN8afAXSiVUlwMgqfJ7LKV8DQyRsFQx1AuRrIB/0uj/oFl30JyL/bFgjA+lp9sLLtUA+NdsBBnilbeaIqWsOP5FcARDU4dAUOHk8cHQc4lpi8=
+    on:
+      repo: avin/d3-timeseries-multi-chart
+  - provider: pages
+    skip_cleanup: true
+    github_token: $GITHUB_TOKEN
+    local_dir: demo/build
+    on:
+      branch: master
