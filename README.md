@@ -4,7 +4,7 @@
 
 ## Demo
 
-[ >> [Online demo](https://avin.github.io/react-flash-change) << ]
+[ >> [Online demo](https://avin.github.io/d3-timeseries-multi-chart) << ]
 
 [![Preview](./assets/preview.png)](https://avin.github.io/d3-timeseries-multi-chart)
 
