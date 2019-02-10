@@ -4,6 +4,7 @@
     "private": true,
     "dependencies": {
         "@avinlab/d3-timeseries-multi-chart": "link:..",
+        "clsx": "^1.0.2",
         "node-sass": "^4.11.0",
         "react": "^16.8.1",
         "react-dom": "^16.8.1",

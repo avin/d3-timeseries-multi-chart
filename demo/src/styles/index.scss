@@ -1,0 +1,9 @@
+@import './variables.scss';
+
+.chartContainer {
+    border: 1px solid $gray1;
+    border-radius: 3px;
+    margin: 10px;
+    box-shadow: 1px 1px 5px $gray5;
+}
+

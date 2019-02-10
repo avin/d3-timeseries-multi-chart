@@ -105,7 +105,7 @@ class TimeseriesMultiChart {
                 if (diff < -10 || diff > 10) {
                     startX = d3.event.x;
 
-                    const timeDiff = (this.currentChartDuration / this.width) * diff;
+                    const timeDiff = this.currentChartDuration / this.width * diff;
 
                     this.lastChartTime -= timeDiff;
                     this.lastChartTime = Math.min(this.maxTime + this.currentChartDuration / 5, this.lastChartTime);
@@ -206,11 +206,13 @@ class TimeseriesMultiChart {
                         if (tipNode) {
                             d3.select(els[idx]).attr('transform', `translate(${mouse[0]},${tipNode.y})`);
 
-                            d3.select(els[idx])
+                            d3
+                                .select(els[idx])
                                 .select('.tipText')
                                 .text(tipNode.value);
 
-                            d3.select(els[idx])
+                            d3
+                                .select(els[idx])
                                 .select('.tipPointerLine')
                                 .attr('d', () =>
                                     d3.line()([
@@ -267,7 +269,8 @@ class TimeseriesMultiChart {
 
                 drawCounter += 1;
 
-                d3.select(axis)
+                d3
+                    .select(axis)
                     .attr('transform', `translate(${drawCounter * 30}, 0)`)
                     .call(d3.axisLeft(yScale))
                     .call(axis => axis.select('.domain').remove())
@@ -284,24 +287,48 @@ class TimeseriesMultiChart {
             .each((dataStream, idx, els) => {
                 const path = els[idx];
 
-                const { color, data, strokeWidth = 1 } = dataStream;
+                const { color, data, strokeWidth = 1, type = 'line', areaFillOpacity = 0.5 } = dataStream;
 
                 this.yAxisScales[idx] = d3
                     .scaleLinear()
                     .range([this.height - (this.showTimeAxis ? this.timeAxisHeight : 0), 0])
                     .domain(d3.extent(data, d => d[1]));
 
-                const line = d3
-                    .line()
-                    .x(([time]) => this.xAxisScale(+time))
-                    .y(([, value]) => this.yAxisScales[idx](value));
+                switch (type) {
+                    case 'line': {
+                        const line = d3
+                            .line()
+                            .x(([time]) => this.xAxisScale(+time))
+                            .y(([, value]) => this.yAxisScales[idx](value));
 
-                d3.select(path)
-                    .datum(this.filterVisibleDataPoints(data, this.xAxisScale, this.yAxisScales[idx]))
-                    .attr('d', line)
-                    .attr('stroke', color)
-                    .attr('stroke-width', strokeWidth)
-                    .attr('fill', 'none');
+                        d3
+                            .select(path)
+                            .datum(this.filterVisibleDataPoints(data, this.xAxisScale, this.yAxisScales[idx]))
+                            .attr('d', line)
+                            .attr('stroke', color)
+                            .attr('stroke-width', strokeWidth)
+                            .attr('fill', 'none');
+                        break;
+                    }
+                    case 'area': {
+                        const area = d3
+                            .area()
+                            .x(([time]) => this.xAxisScale(+time))
+                            .y0(() => this.yAxisScales[idx](d3.min(data, ([, value]) => value)))
+                            .y1(([, value]) => this.yAxisScales[idx](value));
+
+                        d3
+                            .select(path)
+                            .datum(this.filterVisibleDataPoints(data, this.xAxisScale, this.yAxisScales[idx]))
+                            .attr('d', area)
+                            .attr('stroke', color)
+                            .attr('stroke-width', strokeWidth)
+                            .attr('fill', color)
+                            .attr('fill-opacity', areaFillOpacity);
+                        break;
+                    }
+                    default:
+                }
             });
     }
 
@@ -316,7 +343,8 @@ class TimeseriesMultiChart {
                 const { color, data, strokeWidth = 1, showDots = false } = dataStream;
 
                 if (showDots) {
-                    d3.select(group)
+                    d3
+                        .select(group)
                         .selectAll('.dataDot')
                         .data(this.filterVisibleDataPoints(data, this.xAxisScale, this.yAxisScales[idx]))
                         .join(enter => enter.append('circle').attr('class', 'dataDot'))

@@ -1,15 +1,10 @@
-import React, { Component } from 'react';
+import React from 'react';
 import TimeseriesMultiChart from '@avinlab/d3-timeseries-multi-chart';
+import { generateData } from '../../utils/data';
+import styles from './styles.module.scss';
+import cn from 'clsx';
 
-const generateData = seed => {
-    const data = [];
-    for (let i = 0; i < 100; i += 1) {
-        data.push([+new Date() + i * 100000, Math.cos(i / 10 + seed) * seed + Math.cos(i / 4 + Math.random())]);
-    }
-    return data;
-};
-
-class App extends Component {
+export default class Chart1 extends React.Component {
     static defaultProps = {
         width: 600,
         height: 400,
@@ -22,7 +17,7 @@ class App extends Component {
             chartDuration: 3600 * 2000,
             width,
             height,
-            showTimeAxis: false
+            showTimeAxis: false,
         });
         this.chart.render([
             {
@@ -51,20 +46,16 @@ class App extends Component {
         const { width, height } = this.props;
 
         return (
-            <div className="App">
-                <div
-                    className="chartContainer"
-                    style={{
-                        width,
-                        height,
-                    }}
-                    ref={i => {
-                        this.chartContainerRef = i;
-                    }}
-                />
-            </div>
+            <div
+                className={cn('chartContainer', styles.chart)}
+                style={{
+                    width,
+                    height,
+                }}
+                ref={i => {
+                    this.chartContainerRef = i;
+                }}
+            />
         );
     }
 }
-
-export default App;

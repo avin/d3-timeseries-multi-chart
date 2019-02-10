@@ -1,0 +1,14 @@
+.root{
+    display: flex;
+    flex-direction: column;
+}
+.row{
+    display: flex;
+    justify-content: center;
+}
+.title{
+    text-align: center;
+}
+.footer{
+    padding: 20px;
+}
