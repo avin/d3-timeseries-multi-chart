@@ -1,6 +1,6 @@
 {
     "name": "@avinlab/d3-timeseries-multi-chart",
-    "version": "0.1.7",
+    "version": "0.1.8",
     "description": "Chart for multi timeseries datastreams",
     "author": "Avin Grape <carcinogen75@gmail.com> (https://github.com/avin/)",
     "contributors": [
