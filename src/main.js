@@ -56,10 +56,18 @@ class TimeseriesMultiChart {
         Object.assign(this, defaults, config);
     }
 
+    /**
+     * Calculate chart width using original width and commonData axis width
+     * @returns {number}
+     */
     get chartWidth() {
         return this.width - (this.commonDataAxis ? this.commonDataAxisWidth : 0);
     }
 
+    /**
+     * Calculate chart height using original height and time axis height
+     * @returns {number}
+     */
     get chartHeight() {
         return this.height - (this.showTimeAxis ? this.timeAxisHeight : 0);
     }
@@ -76,7 +84,7 @@ class TimeseriesMultiChart {
             .attr('transform', `translate(${this.commonDataAxis ? this.commonDataAxisWidth : 0}, 0)`)
             .style('pointer-events', 'all');
 
-        // Mouse event catcher
+        // Need to mouse event handle
         this.chart
             .append('rect')
             .attr('fill', 'none')
@@ -85,6 +93,7 @@ class TimeseriesMultiChart {
             .attr('width', chartWidth)
             .attr('height', chartHeight);
 
+        // Need to crop line dataLines outgrowths
         this.chart
             .append('clipPath')
             .attr('id', 'chart-clip')
@@ -104,8 +113,10 @@ class TimeseriesMultiChart {
         this.initMouseTip();
     }
 
+    /**
+     * Handle chart zoom
+     */
     initZoom() {
-        // Zoom chart action
         const zoomAction = d3.zoom().on('zoom', () => {
             this.currentChartDuration = this.chartDuration * (1 / d3.event.transform.k);
 
@@ -120,6 +131,9 @@ class TimeseriesMultiChart {
         this.svg.call(zoomAction);
     }
 
+    /**
+     * Handle chart drag
+     */
     initDrag() {
         let startX;
         const dragAction = d3
@@ -159,6 +173,9 @@ class TimeseriesMultiChart {
         this.svg.call(dragAction);
     }
 
+    /**
+     * Mouse tip handle
+     */
     initMouseTip() {
         this.showTipGroup = () => {
             if (!this.dragging) {
@@ -186,6 +203,9 @@ class TimeseriesMultiChart {
             });
     }
 
+    /**
+     * Update mouse tip position and values
+     */
     updateTipGroup() {
         const { mouseX, mouseY } = this;
 
@@ -275,6 +295,9 @@ class TimeseriesMultiChart {
         });
     }
 
+    /**
+     * Render time bottom axis
+     */
     renderTimeAxis() {
         if (!this.showTimeAxis) {
             return;
@@ -295,6 +318,9 @@ class TimeseriesMultiChart {
         this.xTimeAxis.call(d3.axisBottom(this.xTimeScale));
     }
 
+    /**
+     * Render data lines axises or one common value axis
+     */
     renderDataAxises() {
         let drawCounter = 0;
         if (this.commonDataAxis) {
@@ -330,6 +356,9 @@ class TimeseriesMultiChart {
         }
     }
 
+    /**
+     * Render main data lines/areas/bars
+     */
     renderDataLines() {
         // First make scales
         let commonMinValue = Number.MAX_SAFE_INTEGER;
@@ -459,6 +488,9 @@ class TimeseriesMultiChart {
             });
     }
 
+    /**
+     * Render data points on lines
+     */
     renderDataDots() {
         this.chart
             .selectAll('.dataDotsGroup')
@@ -489,6 +521,13 @@ class TimeseriesMultiChart {
             });
     }
 
+    /**
+     * Filter data to get only data in xScale domain
+     * @param data
+     * @param xScale
+     * @param regionMargin
+     * @returns {*}
+     */
     filterVisibleDataPoints(data, xScale, regionMargin = 20) {
         return data.filter(([time]) => {
             const x = xScale(+time);
@@ -496,6 +535,9 @@ class TimeseriesMultiChart {
         });
     }
 
+    /**
+     * Render mouse tip group
+     */
     renderTipGroup() {
         // Render only first time
         if (!this.tipGroup) {
@@ -546,6 +588,10 @@ class TimeseriesMultiChart {
         }
     }
 
+    /**
+     * Main render func
+     * @param dataStreams
+     */
     render(dataStreams) {
         if (dataStreams) {
             this.dataStreams = dataStreams;
@@ -575,6 +621,10 @@ class TimeseriesMultiChart {
         this.updateTipGroup();
     }
 
+    /**
+     * Render func alias
+     * @param dataStreams
+     */
     update(dataStreams) {
         this.render(dataStreams);
     }
