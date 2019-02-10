@@ -172,6 +172,8 @@ class TimeseriesMultiChart {
 
         this.chart
             .on('mouseover', () => {
+                [this.mouseX, this.mouseY] = d3.mouse(this.chart.node());
+
                 this.showTipGroup();
             })
             .on('mouseleave', () => {
