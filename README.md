@@ -70,6 +70,8 @@ chart.render([
 * `timeAxisHeight` _(Number)_ - time axis height.
 * `tipTimeWidth` _(Number)_ - tip time width.
 * `tipTimeFormat` _(String)_ - tip time dateTime format string.
+* `commonDataAxis` _(Boolean)_ - common axis for data lines.
+* `autoScale` _(Boolean)_ - auto scale data points of visible part.
 
 ### Chart data item options
 

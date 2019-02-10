@@ -18,6 +18,8 @@ export default class Chart3 extends React.Component {
             width,
             height,
             showTimeAxis: true,
+            commonDataAxis: true,
+            autoScale: true,
         });
         this.chart.render([
             {

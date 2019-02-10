@@ -25,7 +25,7 @@
                 }
             }
 
-            .timeAxis {
+            .timeAxis, .commonDataAxis {
                 pointer-events: none;
                 text {
                     fill: $light-gray5;
