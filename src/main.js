@@ -51,6 +51,9 @@ const defaults = {
 
     // Max limit for zooming (-1 is disabled)
     maxZoomTime: -1,
+
+    // Render mode for data lines (canvas|svg)
+    renderMode: 'canvas',
 };
 
 class TimeseriesMultiChart {
@@ -90,11 +93,32 @@ class TimeseriesMultiChart {
     _init() {
         const { target, width, height, chartWidth, chartHeight } = this;
 
-        this.svg = d3.select(target).append('svg');
+        d3.select(target)
+            .style('position', 'relative')
+            .style('overflow', 'hidden');
+
+        if (this.renderMode) {
+            this.canvasChart = d3
+                .select(target)
+                .append('canvas')
+                .style('position', 'absolute')
+                .style('top', 0)
+                .style('left', (this.commonDataAxis ? this.commonDataAxisWidth : 0) + 'px')
+                .attr('width', chartWidth)
+                .attr('height', chartHeight);
+            this.canvasChartCtx = this.canvasChart.node().getContext('2d');
+        }
+
+        this.svg = d3
+            .select(target)
+            .append('svg')
+            .style('position', 'absolute')
+            .style('top', 0)
+            .style('left', 0)
+            .attr('width', width)
+            .attr('height', height);
 
         this.chart = this.svg
-            .attr('width', width)
-            .attr('height', height)
             .append('g')
             .attr('transform', `translate(${this.commonDataAxis ? this.commonDataAxisWidth : 0}, 0)`)
             .style('pointer-events', 'all');
@@ -138,10 +162,6 @@ class TimeseriesMultiChart {
 
         const maxScale = this.minZoomTime === -1 ? Number.MAX_SAFE_INTEGER : this.chartDuration / this.minZoomTime;
         const minScale = this.minZoomTime === -1 ? 0 : this.chartDuration / this.maxZoomTime;
-
-        if (this.minZoomTime !== -1) {
-            console.log(minScale, maxScale);
-        }
 
         const zoomAction = d3
             .zoom()
@@ -479,16 +499,27 @@ class TimeseriesMultiChart {
                             .y(([, value]) => yAxisScale(value))
                             .curve(curveFunc);
 
-                        let path = container.select('path');
-                        if (path.empty()) {
-                            path = container.append('path');
+                        if (this.renderMode === 'canvas') {
+                            line.context(this.canvasChartCtx);
+
+                            this.canvasChartCtx.beginPath();
+                            line(this._filterVisibleDataPoints(data, this.xAxisScale));
+                            this.canvasChartCtx.lineWidth = strokeWidth;
+                            this.canvasChartCtx.strokeStyle = color;
+                            this.canvasChartCtx.stroke();
+                        } else {
+                            let path = container.select('path');
+                            if (path.empty()) {
+                                path = container.append('path');
+                            }
+
+                            path.datum(this._filterVisibleDataPoints(data, this.xAxisScale))
+                                .attr('d', line)
+                                .attr('stroke', color)
+                                .attr('stroke-width', strokeWidth)
+                                .attr('fill', 'none');
                         }
 
-                        path.datum(this._filterVisibleDataPoints(data, this.xAxisScale))
-                            .attr('d', line)
-                            .attr('stroke', color)
-                            .attr('stroke-width', strokeWidth)
-                            .attr('fill', 'none');
                         break;
                     }
                     case 'area': {
@@ -498,33 +529,61 @@ class TimeseriesMultiChart {
                             .y0(() => yAxisScale(yAxisScale.domain()[0]))
                             .y1(([, value]) => yAxisScale(value));
 
-                        let path = container.select('path');
-                        if (path.empty()) {
-                            path = container.append('path');
+                        if (this.renderMode === 'canvas') {
+                            area.context(this.canvasChartCtx);
+
+                            this.canvasChartCtx.strokeStyle = color;
+                            this.canvasChartCtx.beginPath();
+                            area(this._filterVisibleDataPoints(data, this.xAxisScale));
+                            this.canvasChartCtx.save();
+                            this.canvasChartCtx.globalAlpha = areaFillOpacity;
+                            this.canvasChartCtx.fillStyle = color;
+                            this.canvasChartCtx.fill();
+                            this.canvasChartCtx.restore();
+                            this.canvasChartCtx.lineWidth = strokeWidth;
+                            this.canvasChartCtx.stroke();
+                        } else {
+                            let path = container.select('path');
+                            if (path.empty()) {
+                                path = container.append('path');
+                            }
+
+                            path.datum(this._filterVisibleDataPoints(data, this.xAxisScale))
+                                .attr('d', area)
+                                .attr('stroke', color)
+                                .attr('stroke-width', strokeWidth)
+                                .attr('fill', color)
+                                .attr('fill-opacity', areaFillOpacity);
                         }
 
-                        path.datum(this._filterVisibleDataPoints(data, this.xAxisScale))
-                            .attr('d', area)
-                            .attr('stroke', color)
-                            .attr('stroke-width', strokeWidth)
-                            .attr('fill', color)
-                            .attr('fill-opacity', areaFillOpacity);
                         break;
                     }
                     case 'bar': {
-                        container
-                            .selectAll('rect')
-                            .data(this._filterVisibleDataPoints(data, this.xAxisScale))
-                            .join('rect')
-                            .attr('fill', color)
-                            .attr('width', strokeWidth)
-                            .attr('x', ([time]) => this.xAxisScale(+time) - strokeWidth / 2)
-                            .attr('y', ([, value]) => yAxisScale(value))
-                            .attr(
-                                'height',
-                                ([, value]) =>
+                        if (this.renderMode === 'canvas') {
+                            this._filterVisibleDataPoints(data, this.xAxisScale).forEach(([time, value]) => {
+                                this.canvasChartCtx.fillStyle = color;
+                                this.canvasChartCtx.fillRect(
+                                    this.xAxisScale(+time) - strokeWidth / 2,
+                                    yAxisScale(value),
+                                    strokeWidth,
                                     this.height - (this.showTimeAxis ? this.timeAxisHeight : 0) - yAxisScale(value)
-                            );
+                                );
+                            });
+                        } else {
+                            container
+                                .selectAll('rect')
+                                .data(this._filterVisibleDataPoints(data, this.xAxisScale))
+                                .join('rect')
+                                .attr('fill', color)
+                                .attr('width', strokeWidth)
+                                .attr('x', ([time]) => this.xAxisScale(+time) - strokeWidth / 2)
+                                .attr('y', ([, value]) => yAxisScale(value))
+                                .attr(
+                                    'height',
+                                    ([, value]) =>
+                                        this.height - (this.showTimeAxis ? this.timeAxisHeight : 0) - yAxisScale(value)
+                                );
+                        }
 
                         break;
                     }
@@ -554,14 +613,30 @@ class TimeseriesMultiChart {
                 const dotsRadius = dataStream.dotsRadius || strokeWidth * 2;
 
                 if (showDots) {
-                    d3.select(group)
-                        .selectAll('.dataDot')
-                        .data(this._filterVisibleDataPoints(data, this.xAxisScale))
-                        .join(enter => enter.append('circle').attr('class', 'dataDot'))
-                        .attr('r', dotsRadius)
-                        .attr('fill', color)
-                        .attr('cx', ([time]) => this.xAxisScale(+time))
-                        .attr('cy', ([, value]) => yAxisScale(value));
+                    if (this.renderMode === 'canvas') {
+                        this._filterVisibleDataPoints(data, this.xAxisScale).forEach(([time, value]) => {
+                            this.canvasChartCtx.beginPath();
+                            this.canvasChartCtx.arc(
+                                this.xAxisScale(+time),
+                                yAxisScale(value),
+                                dotsRadius,
+                                0,
+                                2 * Math.PI,
+                                true
+                            );
+                            this.canvasChartCtx.fillStyle = color;
+                            this.canvasChartCtx.fill();
+                        });
+                    } else {
+                        d3.select(group)
+                            .selectAll('.dataDot')
+                            .data(this._filterVisibleDataPoints(data, this.xAxisScale))
+                            .join(enter => enter.append('circle').attr('class', 'dataDot'))
+                            .attr('r', dotsRadius)
+                            .attr('fill', color)
+                            .attr('cx', ([time]) => this.xAxisScale(+time))
+                            .attr('cy', ([, value]) => yAxisScale(value));
+                    }
                 }
             });
     }
@@ -641,6 +716,8 @@ class TimeseriesMultiChart {
         if (dataStreams) {
             this.dataStreams = dataStreams;
         }
+
+        this.canvasChartCtx.clearRect(0, 0, this.chartWidth, this.chartHeight);
 
         this.maxTime = Number.MAX_SAFE_INTEGER * -1;
         this.minTime = Number.MAX_SAFE_INTEGER;

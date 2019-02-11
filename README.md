@@ -2,6 +2,16 @@
 
 > Chart for multi timeseries datastreams.
 
+## Features
+* Draw some data lines on same chart.
+* Draw separate axises or common onw for data lines.
+* Canvas render mode for data lines to level up performance.
+* Zoom and drag time periods.
+* Use Line, Area or Bar drawing styles for data lines.
+* Some curve types for data lines.
+* Preview data values on mouse over.
+* Allow to live update chart's data.
+
 ## Demo
 
 [ >> [Online demo](https://avin.github.io/d3-timeseries-multi-chart) << ]
@@ -62,7 +72,8 @@ chart.render([
 
 ### Chart options
 
--   `target` _(String|Element)_ - target element to mount chart svg (default: `#chart`).
+-   `target` _(String | Element)_ - target element to mount chart svg (default: `#chart`).
+-   `renderMode` _(String)_ - render mode for dataLines drawing (`canvas` | `svg`) (default: `canvas`).
 -   `width` _(Number)_ - width of chart (default: `500`).
 -   `height` _(Number)_ - height of chart (default: `300`).
 -   `chartDuration` _(Number)_ - default chart duration (default: `3600000` (1hour)).
@@ -96,9 +107,9 @@ chart.render([
 -   `strokeWidth` _(Number)_ - stroke width of data line (default: `1`).
 -   `showDots` _(Boolean)_ - show data points on data line (default: `false`).
 -   `dotsRadius` _(Number)_ - data points radius (default: x2 of strokeWidth).
--   `type` _(String)_ - type of data line (`line`|`area`|`bar`) (default: `line`).
+-   `type` _(String)_ - type of data line (`line` | `area` | `bar`) (default: `line`).
 -   `areaFillOpacity` _(Number)_ - opacity factor for color filling of area data line type.
--   `curve` _(String)_ - data line curve type (`linear`|`stepAfter`|`stepBefore`|`monotoneX`) (default: `linear`).
+-   `curve` _(String)_ - data line curve type (`linear` | `stepAfter` | `stepBefore` | `monotoneX`) (default: `linear`).
 
 ## License
 

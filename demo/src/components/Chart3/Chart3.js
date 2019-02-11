@@ -20,7 +20,7 @@ export default class Chart3 extends React.Component {
             showTimeAxis: true,
             commonDataAxis: true,
             autoScale: true,
-            maxZoomTime: 3600 * 8000,
+            maxZoomTime: 3600 * 16000,
             minZoomTime: 60*10 * 1000,
         });
         this.chart.render([
