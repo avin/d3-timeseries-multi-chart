@@ -62,31 +62,43 @@ chart.render([
 
 ### Chart options
 
-* `target` _(String|Element)_ - target element to mount chart svg (default: `#chart`).
-* `width` _(Number)_ - width of chart (default: 500).
-* `height` _(Number)_ - height of chart (default: 300).
-* `chartDuration` _(Number)_ - default chart duration (default: `3600000` (1hour)).
-* `showTimeAxis` _(Boolean)_ - show time axis.
-* `timeAxisHeight` _(Number)_ - time axis height (default: `20`).
-* `tipTimeWidth` _(Number)_ - tip time width (default: `125`).
-* `tipTimeFormat` _(String)_ - tip time dateTime format string (default: `%Y-%m-%d %H:%M:%S`).
-* `commonDataAxis` _(Boolean)_ - common axis for data lines.
-* `commonDataAxisWidth` _(Number)_ - width of common data axis (default: `30`).
-* `autoScale` _(Boolean)_ - auto scale data points of visible part.
-* `chartPaddingFactor` _(Number)_ - data lines padding factor : 1/N of chart height (less is more) (default: `30`).
+-   `target` _(String|Element)_ - target element to mount chart svg (default: `#chart`).
+-   `width` _(Number)_ - width of chart (default: `500`).
+-   `height` _(Number)_ - height of chart (default: `300`).
+-   `chartDuration` _(Number)_ - default chart duration (default: `3600000` (1hour)).
+-   `showTimeAxis` _(Boolean)_ - show time axis (default: `true`).
+-   `timeAxisHeight` _(Number)_ - time axis height (default: `20`).
+-   `tipTimeWidth` _(Number)_ - tip time width (default: `125`).
+-   `tipTimeFormat` _(String)_ - tip time dateTime format string (default: `%Y-%m-%d %H:%M:%S`).
+-   `commonDataAxis` _(Boolean)_ - common axis for data lines (default: `false`).
+-   `commonDataAxisWidth` _(Number)_ - width of common data axis (default: `30`).
+-   `autoScale` _(Boolean)_ - auto scale data points of visible part.
+-   `chartPaddingFactor` _(Number)_ - data lines padding factor : 1/N of chart height (less is more) (default: `30`).
+-   `draggable` _(Boolean)_ - allow to drag (default: `true`).
+-   `zoomable` _(Boolean)_ - allow to zoom (default: `true`).
+-   `showMouseTip` _(Boolean)_ - enable on mouseover values display (default: ).
+-   `minZoomTime` _(Number)_ - min limit for zooming (-1 is disabled) (default: `-1`).
+-   `maxZoomTime` _(Number)_ - max limit for zooming (-1 is disabled) (default: `-1`).
 
-### Chart data item options
+### Chart methods
 
-* `label` _(String)_ - DataStream human name.
-* `color` _(String)_ - hex color string for data line.
-* `data` _(Array)_ - array of data values. Array item structure: [date: DateTime, value: Number].
-* `showAxis` _(Boolean)_ - Show Y axis for current dataStream.
-* `strokeWidth` _(Number)_ - Stroke width of data line.
-* `showDots` _(Boolean)_ - Show data points on data line.
-* `dotsRadius` _(Number)_ - Data points radius (default: x2 of strokeWidth).
-* `type` _(String)_ - Type of data line (`line`|`area`|`bar`).
-* `areaFillOpacity` _(Number)_ - Opacity factor for color filling of area data line type.
-* `curve` _(String)_ - Data line curve type (`linear`|`stepAfter`|`stepBefore`|`monotoneX`).
+-   `render` - render data on chart. Params: (`DataStreamsArray` - required first time)
+-   `update` - `render` method alias.
+-   `setChartDuration` - update chart duration (change time zoom level). Params: (newChartDuration)
+-   `setLastChartTime` - update last chart time (change chart position). Params: (newLastChartTime)
+
+### Chart DataStreamsArray item options
+
+-   `data` _(Array)_ **Required** - array of data values. Array item structure: [date: DateTime, value: Number].
+-   `color` _(String)_ **Required** - hex color string for data line.
+-   `label` _(String)_ - dataStream human name.
+-   `showAxis` _(Boolean)_ - show Y axis for current dataStream (default: `true`).
+-   `strokeWidth` _(Number)_ - stroke width of data line (default: `1`).
+-   `showDots` _(Boolean)_ - show data points on data line (default: `false`).
+-   `dotsRadius` _(Number)_ - data points radius (default: x2 of strokeWidth).
+-   `type` _(String)_ - type of data line (`line`|`area`|`bar`) (default: `line`).
+-   `areaFillOpacity` _(Number)_ - opacity factor for color filling of area data line type.
+-   `curve` _(String)_ - data line curve type (`linear`|`stepAfter`|`stepBefore`|`monotoneX`) (default: `linear`).
 
 ## License
 

@@ -2,10 +2,6 @@
 # yarn lockfile v1
 
 
-"@avinlab/d3-timeseries-multi-chart@link:.":
-  version "0.0.0"
-  uid ""
-
 "@avinlab/d3-timeseries-multi-chart@link:..":
   version "0.0.0"
   uid ""

@@ -36,16 +36,31 @@ const defaults = {
 
     // tip line time's format
     tipTimeFormat: '%Y-%m-%d %H:%M:%S',
+
+    // Allow to drag
+    draggable: true,
+
+    // Allow to zoom
+    zoomable: true,
+
+    // Enable on mouseover values display
+    showMouseTip: true,
+
+    // Min limit for zooming (-1 is disabled)
+    minZoomTime: -1,
+
+    // Max limit for zooming (-1 is disabled)
+    maxZoomTime: -1,
 };
 
 class TimeseriesMultiChart {
     constructor(options) {
         this.set(options);
 
-        this.dragging = false;
+        this._dragging = false;
         this.currentChartDuration = this.chartDuration;
 
-        this.init();
+        this._init();
     }
 
     /**
@@ -72,7 +87,7 @@ class TimeseriesMultiChart {
         return this.height - (this.showTimeAxis ? this.timeAxisHeight : 0);
     }
 
-    init() {
+    _init() {
         const { target, width, height, chartWidth, chartHeight } = this;
 
         this.svg = d3.select(target).append('svg');
@@ -108,39 +123,59 @@ class TimeseriesMultiChart {
         this.yAxisScales = [];
         this.commonYAxisScale = d3.scaleLinear().range([chartHeight, 0]);
 
-        this.initDrag();
-        this.initZoom();
-        this.initMouseTip();
+        this._initDrag();
+        this._initZoom();
+        this._initMouseTip();
     }
 
     /**
      * Handle chart zoom
      */
-    initZoom() {
-        const zoomAction = d3.zoom().on('zoom', () => {
-            this.currentChartDuration = this.chartDuration * (1 / d3.event.transform.k);
+    _initZoom() {
+        if (!this.zoomable) {
+            return;
+        }
 
-            this.chart
-                .select('.tipGroup')
-                .transition()
-                .style('opacity', '0');
+        const maxScale = this.minZoomTime === -1 ? Number.MAX_SAFE_INTEGER : this.chartDuration / this.minZoomTime;
+        const minScale = this.minZoomTime === -1 ? 0 : this.chartDuration / this.maxZoomTime;
 
-            this.update();
+        if (this.minZoomTime !== -1) {
+            console.log(minScale, maxScale);
+        }
+
+        const zoomAction = d3
+            .zoom()
+            .scaleExtent([minScale, maxScale])
+            .on('zoom', () => {
+                this.currentChartDuration = this.chartDuration * (1 / d3.event.transform.k);
+
+                this.chart
+                    .select('.tipGroup')
+                    .transition()
+                    .style('opacity', '0');
+
+                this.update();
+            });
+
+        this.svg.call(zoomAction).on('wheel', function() {
+            d3.event.preventDefault();
         });
-
-        this.svg.call(zoomAction);
     }
 
     /**
      * Handle chart drag
      */
-    initDrag() {
+    _initDrag() {
+        if (!this.draggable) {
+            return;
+        }
+
         let startX;
         const dragAction = d3
             .drag()
             .clickDistance(10)
             .on('start', () => {
-                this.dragging = true;
+                this._dragging = true;
                 startX = d3.event.x;
                 this.chart
                     .select('.tipGroup')
@@ -148,7 +183,7 @@ class TimeseriesMultiChart {
                     .style('opacity', '0');
             })
             .on('end', () => {
-                this.dragging = false;
+                this._dragging = false;
                 this.chart
                     .select('.tipGroup')
                     .transition()
@@ -176,37 +211,47 @@ class TimeseriesMultiChart {
     /**
      * Mouse tip handle
      */
-    initMouseTip() {
-        this.showTipGroup = () => {
-            if (!this.dragging) {
-                this.tipGroup.style('opacity', '1');
-            }
-        };
-
-        this.hideTipGroup = () => {
-            this.tipGroup.style('opacity', '0');
-        };
+    _initMouseTip() {
+        if (!this.showMouseTip) {
+            return;
+        }
 
         this.chart
             .on('mouseover', () => {
                 [this.mouseX, this.mouseY] = d3.mouse(this.chart.node());
 
-                this.showTipGroup();
+                this._showTipGroup();
             })
             .on('mouseleave', () => {
-                this.hideTipGroup();
+                this._hideTipGroup();
             })
             .on('mousemove', () => {
                 [this.mouseX, this.mouseY] = d3.mouse(this.chart.node());
 
-                this.updateTipGroup();
+                this._updateTipGroup();
             });
+    }
+
+    _showTipGroup() {
+        if (!this._dragging && this.tipGroup) {
+            this.tipGroup.style('opacity', '1');
+        }
+    }
+
+    _hideTipGroup() {
+        if (this.tipGroup) {
+            this.tipGroup.style('opacity', '0');
+        }
     }
 
     /**
      * Update mouse tip position and values
      */
-    updateTipGroup() {
+    _updateTipGroup() {
+        if (!this.showMouseTip) {
+            return;
+        }
+
         const { mouseX, mouseY } = this;
 
         if (mouseX === undefined) {
@@ -221,7 +266,7 @@ class TimeseriesMultiChart {
         this.tipGroup
             .select(`.tipMouseLine`)
             .attr('d', () =>
-                d3.line()([[mouseX, this.height - (this.showTimeAxis ? this.timeAxisHeight : 0)], [mouseX, 0]]),
+                d3.line()([[mouseX, this.height - (this.showTimeAxis ? this.timeAxisHeight : 0)], [mouseX, 0]])
             );
 
         let positionX = mouseX - this.tipTimeWidth / 2;
@@ -287,7 +332,7 @@ class TimeseriesMultiChart {
                         d3.line()([
                             [-3, 0],
                             [Math.min(-3, this.xAxisScale(tipNode.date) - mouseX), tipNode.targetY - tipNode.y],
-                        ]),
+                        ])
                     );
             } else {
                 d3.select(els[idx]).attr('transform', `translate(-999,-999)`);
@@ -298,7 +343,7 @@ class TimeseriesMultiChart {
     /**
      * Render time bottom axis
      */
-    renderTimeAxis() {
+    _renderTimeAxis() {
         if (!this.showTimeAxis) {
             return;
         }
@@ -321,7 +366,7 @@ class TimeseriesMultiChart {
     /**
      * Render data lines axises or one common value axis
      */
-    renderDataAxises() {
+    _renderDataAxises() {
         let drawCounter = 0;
         if (this.commonDataAxis) {
             let dataAxis = this.chart.select('.commonDataAxis');
@@ -359,7 +404,7 @@ class TimeseriesMultiChart {
     /**
      * Render main data lines/areas/bars
      */
-    renderDataLines() {
+    _renderDataLines() {
         // First make scales
         let commonMinValue = Number.MAX_SAFE_INTEGER;
         let commonMaxValue = -Number.MAX_SAFE_INTEGER;
@@ -368,7 +413,7 @@ class TimeseriesMultiChart {
 
             let scalingData = data;
             if (this.autoScale) {
-                scalingData = this.filterVisibleDataPoints(data, this.xAxisScale);
+                scalingData = this._filterVisibleDataPoints(data, this.xAxisScale);
             }
 
             const extent = d3.extent(scalingData, d => d[1]);
@@ -390,7 +435,7 @@ class TimeseriesMultiChart {
                 enter
                     .append('g')
                     .attr('class', 'dataLine')
-                    .attr('clip-path', 'url(#chart-clip)'),
+                    .attr('clip-path', 'url(#chart-clip)')
             )
             .each((dataStream, idx, els) => {
                 const container = d3.select(els[idx]);
@@ -439,7 +484,7 @@ class TimeseriesMultiChart {
                             path = container.append('path');
                         }
 
-                        path.datum(this.filterVisibleDataPoints(data, this.xAxisScale))
+                        path.datum(this._filterVisibleDataPoints(data, this.xAxisScale))
                             .attr('d', line)
                             .attr('stroke', color)
                             .attr('stroke-width', strokeWidth)
@@ -458,7 +503,7 @@ class TimeseriesMultiChart {
                             path = container.append('path');
                         }
 
-                        path.datum(this.filterVisibleDataPoints(data, this.xAxisScale))
+                        path.datum(this._filterVisibleDataPoints(data, this.xAxisScale))
                             .attr('d', area)
                             .attr('stroke', color)
                             .attr('stroke-width', strokeWidth)
@@ -469,7 +514,7 @@ class TimeseriesMultiChart {
                     case 'bar': {
                         container
                             .selectAll('rect')
-                            .data(this.filterVisibleDataPoints(data, this.xAxisScale))
+                            .data(this._filterVisibleDataPoints(data, this.xAxisScale))
                             .join('rect')
                             .attr('fill', color)
                             .attr('width', strokeWidth)
@@ -478,7 +523,7 @@ class TimeseriesMultiChart {
                             .attr(
                                 'height',
                                 ([, value]) =>
-                                    this.height - (this.showTimeAxis ? this.timeAxisHeight : 0) - yAxisScale(value),
+                                    this.height - (this.showTimeAxis ? this.timeAxisHeight : 0) - yAxisScale(value)
                             );
 
                         break;
@@ -491,7 +536,7 @@ class TimeseriesMultiChart {
     /**
      * Render data points on lines
      */
-    renderDataDots() {
+    _renderDataDots() {
         this.chart
             .selectAll('.dataDotsGroup')
             .data(this.dataStreams)
@@ -499,7 +544,7 @@ class TimeseriesMultiChart {
                 enter
                     .append('g')
                     .attr('class', 'dataDotsGroup')
-                    .attr('clip-path', 'url(#chart-clip)'),
+                    .attr('clip-path', 'url(#chart-clip)')
             )
             .each((dataStream, idx, els) => {
                 const group = els[idx];
@@ -511,7 +556,7 @@ class TimeseriesMultiChart {
                 if (showDots) {
                     d3.select(group)
                         .selectAll('.dataDot')
-                        .data(this.filterVisibleDataPoints(data, this.xAxisScale))
+                        .data(this._filterVisibleDataPoints(data, this.xAxisScale))
                         .join(enter => enter.append('circle').attr('class', 'dataDot'))
                         .attr('r', dotsRadius)
                         .attr('fill', color)
@@ -528,7 +573,7 @@ class TimeseriesMultiChart {
      * @param regionMargin
      * @returns {*}
      */
-    filterVisibleDataPoints(data, xScale, regionMargin = 20) {
+    _filterVisibleDataPoints(data, xScale, regionMargin = 20) {
         return data.filter(([time]) => {
             const x = xScale(+time);
             return x > -regionMargin && x < this.chartWidth + regionMargin;
@@ -538,7 +583,7 @@ class TimeseriesMultiChart {
     /**
      * Render mouse tip group
      */
-    renderTipGroup() {
+    _renderTipGroup() {
         // Render only first time
         if (!this.tipGroup) {
             this.tipGroup = this.chart
@@ -565,7 +610,7 @@ class TimeseriesMultiChart {
                         .append('circle')
                         .attr('class', 'tipCircle')
                         .attr('r', 4)
-                        .style('stroke', d => d.color),
+                        .style('stroke', d => d.color)
                 )
                 .call(g => g.append('text').attr('class', 'tipText'));
 
@@ -612,13 +657,13 @@ class TimeseriesMultiChart {
 
         this.xAxisScale.domain([this.lastChartTime - this.currentChartDuration, this.lastChartTime]);
 
-        this.renderTimeAxis();
-        this.renderDataLines();
-        this.renderDataDots();
-        this.renderDataAxises();
-        this.renderTipGroup();
+        this._renderTimeAxis();
+        this._renderDataLines();
+        this._renderDataDots();
+        this._renderDataAxises();
+        this._renderTipGroup();
 
-        this.updateTipGroup();
+        this._updateTipGroup();
     }
 
     /**
@@ -627,6 +672,27 @@ class TimeseriesMultiChart {
      */
     update(dataStreams) {
         this.render(dataStreams);
+    }
+
+    /**
+     * Update chart duration (change time zoom level)
+     * @param newChartDuration
+     */
+    setChartDuration(newChartDuration) {
+        this.currentChartDuration = newChartDuration;
+        this.chartDuration = newChartDuration;
+
+        this.update();
+    }
+
+    /**
+     * Update last chart time (change chart position)
+     * @param newLastChartTime
+     */
+    setLastChartTime(newLastChartTime) {
+        this.lastChartTime = newLastChartTime;
+
+        this.update();
     }
 }
 

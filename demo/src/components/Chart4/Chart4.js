@@ -18,7 +18,10 @@ export default class Chart4 extends React.Component {
             width,
             height,
             showTimeAxis: true,
+            maxZoomTime: 3600 * 8000,
+            minZoomTime: 60*10 * 1000,
         });
+
         this.chart.render([
             {
                 label: 'Data 1',

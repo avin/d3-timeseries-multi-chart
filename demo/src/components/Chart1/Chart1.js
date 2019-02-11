@@ -54,6 +54,9 @@ export default class Chart1 extends React.Component {
             width,
             height,
             showTimeAxis: false,
+            draggable: false,
+            maxZoomTime: 3600 * 8000,
+            minZoomTime: 60*10 * 1000,
         });
         this.chart.render([dataStream1, dataStream2]);
 

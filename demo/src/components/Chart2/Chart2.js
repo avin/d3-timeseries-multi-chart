@@ -18,6 +18,8 @@ export default class Chart2 extends React.Component {
             width,
             height,
             showTimeAxis: false,
+            maxZoomTime: 3600 * 8000,
+            minZoomTime: 60*10 * 1000,
         });
         this.chart.render([
             {
