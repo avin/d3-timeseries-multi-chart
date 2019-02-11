@@ -19,7 +19,7 @@ export default class Chart4 extends React.Component {
             height,
             showTimeAxis: true,
             maxZoomTime: 3600 * 8000,
-            minZoomTime: 60*10 * 1000,
+            minZoomTime: 60 * 10 * 1000,
         });
 
         this.chart.render([
@@ -45,7 +45,7 @@ export default class Chart4 extends React.Component {
                 type: 'bar',
                 showDots: true,
                 strokeWidth: 2,
-                dotsRadius: 2.5
+                dotsRadius: 2.5,
             },
         ]);
     }

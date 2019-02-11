@@ -3,14 +3,15 @@
 > Chart for multi timeseries datastreams.
 
 ## Features
-* Draw some data lines on same chart.
-* Draw separate axises or common onw for data lines.
-* Canvas render mode for data lines to level up performance.
-* Zoom and drag time periods.
-* Use Line, Area or Bar drawing styles for data lines.
-* Some curve types for data lines.
-* Preview data values on mouse over.
-* Allow to live update chart's data.
+
+-   Draw some data lines on same chart.
+-   Draw separate axises or common one for data lines.
+-   Canvas render mode for data lines to level up performance.
+-   Zoom and drag time periods.
+-   Use Line, Area or Bar drawing styles for data lines.
+-   Some curve types for data lines.
+-   Preview data values on mouse over.
+-   Allow to live update chart's data.
 
 ## Demo
 
@@ -97,6 +98,8 @@ chart.render([
 -   `update` - `render` method alias.
 -   `setChartDuration` - update chart duration (change time zoom level). Params: (newChartDuration)
 -   `setLastChartTime` - update last chart time (change chart position). Params: (newLastChartTime)
+-   `on` - add event handler.
+-   `off` - remove event handler.
 
 ### Chart DataStreamsArray item options
 
@@ -110,6 +113,28 @@ chart.render([
 -   `type` _(String)_ - type of data line (`line` | `area` | `bar`) (default: `line`).
 -   `areaFillOpacity` _(Number)_ - opacity factor for color filling of area data line type.
 -   `curve` _(String)_ - data line curve type (`linear` | `stepAfter` | `stepBefore` | `monotoneX`) (default: `linear`).
+
+### Event handlers params
+
+#### zoom
+
+-   `beforeChartDuration` - chart duration before zoom
+-   `afterChartDuration` - chart duration after zoom
+-   `scaleFactor` - zoom scale factor
+
+#### dragStart
+
+-   `startX` - mouse `x` value on start dragging
+
+#### dragEnd
+
+-   `endX` - mouse `y` value on finish dragging
+
+#### drag
+
+-   `beforeLastChartTime` - last chart time before drag
+-   `afterLastChartTime` - last chart time after drag
+-   `diff` - dragging diff in pixels
 
 ## License
 

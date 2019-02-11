@@ -63,6 +63,8 @@ class TimeseriesMultiChart {
         this._dragging = false;
         this.currentChartDuration = this.chartDuration;
 
+        this._handlers = {};
+
         this._init();
     }
 
@@ -167,6 +169,7 @@ class TimeseriesMultiChart {
             .zoom()
             .scaleExtent([minScale, maxScale])
             .on('zoom', () => {
+                const beforeChartDuration = this.currentChartDuration;
                 this.currentChartDuration = this.chartDuration * (1 / d3.event.transform.k);
 
                 this.chart
@@ -175,6 +178,12 @@ class TimeseriesMultiChart {
                     .style('opacity', '0');
 
                 this.update();
+
+                this._callHandler('zoom', {
+                    beforeChartDuration,
+                    afterChartDuration: this.currentChartDuration,
+                    scaleFactor: d3.event.transform.k,
+                });
             });
 
         this.svg.call(zoomAction).on('wheel', function() {
@@ -201,6 +210,10 @@ class TimeseriesMultiChart {
                     .select('.tipGroup')
                     .transition()
                     .style('opacity', '0');
+
+                this._callHandler('dragStart', {
+                    startX,
+                });
             })
             .on('end', () => {
                 this._dragging = false;
@@ -208,6 +221,10 @@ class TimeseriesMultiChart {
                     .select('.tipGroup')
                     .transition()
                     .style('opacity', '1');
+
+                this._callHandler('dragEnd', {
+                    endX: d3.event.x,
+                });
             })
             .on('drag', () => {
                 const diff = d3.event.x - startX;
@@ -217,11 +234,18 @@ class TimeseriesMultiChart {
 
                     const timeDiff = (this.currentChartDuration / this.chartWidth) * diff;
 
+                    const beforeLastChartTime = this.lastChartTime;
                     this.lastChartTime -= timeDiff;
                     this.lastChartTime = Math.min(this.maxTime + this.currentChartDuration / 5, this.lastChartTime);
                     this.lastChartTime = Math.max(this.minTime + this.currentChartDuration / 2, this.lastChartTime);
 
                     this.update();
+
+                    this._callHandler('drag', {
+                        beforeLastChartTime,
+                        afterLastChartTime: this.lastChartTime,
+                        diff,
+                    });
                 }
             });
 
@@ -708,6 +732,13 @@ class TimeseriesMultiChart {
         }
     }
 
+    _callHandler(actionType, ...params) {
+        this._handlers[actionType] = this._handlers[actionType] || [];
+        this._handlers[actionType].forEach(handler => {
+            handler(...params);
+        });
+    }
+
     /**
      * Main render func
      * @param dataStreams
@@ -770,6 +801,33 @@ class TimeseriesMultiChart {
         this.lastChartTime = newLastChartTime;
 
         this.update();
+    }
+
+    /**
+     * Add event handler
+     * @param actionType
+     * @param handler
+     */
+    on(actionType, handler) {
+        if (typeof handler !== 'function') {
+            throw new Error('Handle must be a function');
+        }
+        this._handlers[actionType] = this._handlers[actionType] || [];
+
+        this._handlers[actionType].push(handler);
+    }
+
+    /**
+     * Remove event handler
+     * @param actionType
+     * @param handler
+     */
+    off(actionType, handler) {
+        if (typeof handler !== 'function') {
+            throw new Error('Handle must be a function');
+        }
+        this._handlers[actionType] = this._handlers[actionType] || [];
+        this._handlers[actionType] = this._handlers[actionType].filter(i => i !== handler);
     }
 }
 
