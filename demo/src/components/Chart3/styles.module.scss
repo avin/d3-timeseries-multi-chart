@@ -1,12 +1,11 @@
 @import 'src/styles/variables.scss';
 
-.chart{
+.chart {
     background-color: $dark-gray3;
     color: '#FFF';
 
-    :global{
+    :global {
         svg {
-
             .chartLine {
                 fill: none;
                 stroke-width: 2;
@@ -23,7 +22,8 @@
                 }
             }
 
-            .timeAxis, .commonDataAxis {
+            .timeAxis,
+            .commonDataAxis {
                 text {
                     fill: $light-gray5;
                 }
@@ -67,6 +67,42 @@
                 fill: $dark-gray3;
             }
         }
+    }
+}
 
+.controls {
+    position: absolute;
+    top: 5px;
+    left: 40px;
+    z-index: 5;
+
+    :global {
+        .btn-group button {
+            background-color: $light-gray3; /* Green background */
+            border: 1px solid $dark-gray3; /* Green border */
+            color: $dark-gray3; /* White text */
+            padding: 5px 12px; /* Some padding */
+            cursor: pointer; /* Pointer/hand icon */
+            float: left; /* Float the buttons side by side */
+
+            &:focus {
+                outline: 0;
+            }
+
+            &.active {
+                background-color: $gray3;
+            }
+        }
+
+        .btn-group button:not(:last-child) {
+            border-right: none; /* Prevent double borders */
+        }
+
+        /* Clear floats (clearfix hack) */
+        .btn-group:after {
+            content: '';
+            clear: both;
+            display: table;
+        }
     }
 }

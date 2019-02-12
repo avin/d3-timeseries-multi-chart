@@ -684,52 +684,54 @@ class TimeseriesMultiChart {
      */
     _renderTipGroup() {
         // Render only first time
-        if (!this.tipGroup) {
-            this.tipGroup = this.chart
-                .append('g')
-                .attr('class', 'tipGroup')
-                .style('opacity', '0');
-
-            this.tipGroup
-                .append('path') // this is the black vertical line to follow mouse
-                .attr('class', 'tipMouseLine')
-                .attr('stroke', this.tipStrokeColor)
-                .attr('stroke-width', 2);
-
-            this.tipGroup
-                .selectAll('.dataStreamTip')
-                .data(this.dataStreams)
-                .enter()
-                .append('g')
-                .attr('class', 'dataStreamTip')
-                .call(g => g.append('path').attr('class', 'tipPointerLine'))
-                .call(g =>
-                    g
-
-                        .append('circle')
-                        .attr('class', 'tipCircle')
-                        .attr('r', 4)
-                        .style('stroke', d => d.color)
-                )
-                .call(g => g.append('text').attr('class', 'tipText'));
-
-            const tipTime = this.tipGroup.append('g').attr('class', 'tipTime');
-
-            tipTime
-                .append('rect')
-                .attr('class', 'tipTimeRect')
-                .attr('x', 0)
-                .attr('y', 0)
-                .attr('width', this.tipTimeWidth)
-                .attr('height', this.timeAxisHeight)
-                .attr('fill', this.tipStrokeColor);
-
-            tipTime
-                .append('text')
-                .attr('class', 'tipTimeText')
-                .attr('text-anchor', 'middle')
-                .attr('transform', `translate(${this.tipTimeWidth / 2}, ${this.timeAxisHeight / 2})`);
+        if (this.tipGroup) {
+            this.tipGroup.remove();
         }
+
+        this.tipGroup = this.chart
+            .append('g')
+            .attr('class', 'tipGroup')
+            .style('opacity', '0');
+
+        this.tipGroup
+            .append('path') // this is the black vertical line to follow mouse
+            .attr('class', 'tipMouseLine')
+            .attr('stroke', this.tipStrokeColor)
+            .attr('stroke-width', 2);
+
+        this.tipGroup
+            .selectAll('.dataStreamTip')
+            .data(this.dataStreams)
+            .enter()
+            .append('g')
+            .attr('class', 'dataStreamTip')
+            .call(g => g.append('path').attr('class', 'tipPointerLine'))
+            .call(g =>
+                g
+
+                    .append('circle')
+                    .attr('class', 'tipCircle')
+                    .attr('r', 4)
+                    .style('stroke', d => d.color)
+            )
+            .call(g => g.append('text').attr('class', 'tipText'));
+
+        const tipTime = this.tipGroup.append('g').attr('class', 'tipTime');
+
+        tipTime
+            .append('rect')
+            .attr('class', 'tipTimeRect')
+            .attr('x', 0)
+            .attr('y', 0)
+            .attr('width', this.tipTimeWidth)
+            .attr('height', this.timeAxisHeight)
+            .attr('fill', this.tipStrokeColor);
+
+        tipTime
+            .append('text')
+            .attr('class', 'tipTimeText')
+            .attr('text-anchor', 'middle')
+            .attr('transform', `translate(${this.tipTimeWidth / 2}, ${this.timeAxisHeight / 2})`);
     }
 
     _callHandler(actionType, ...params) {
@@ -745,7 +747,7 @@ class TimeseriesMultiChart {
      */
     render(dataStreams) {
         if (dataStreams) {
-            this.dataStreams = dataStreams;
+            this.dataStreams = dataStreams.filter(d => d.data && d.data.length);
         }
 
         this.canvasChartCtx.clearRect(0, 0, this.chartWidth, this.chartHeight);
@@ -769,7 +771,9 @@ class TimeseriesMultiChart {
         this._renderDataLines();
         this._renderDataDots();
         this._renderDataAxises();
-        this._renderTipGroup();
+        if (dataStreams) {
+            this._renderTipGroup();
+        }
 
         this._updateTipGroup();
     }
