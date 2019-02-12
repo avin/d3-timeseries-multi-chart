@@ -165,7 +165,7 @@ class TimeseriesMultiChart {
         const maxScale = this.minZoomTime === -1 ? Number.MAX_SAFE_INTEGER : this.chartDuration / this.minZoomTime;
         const minScale = this.minZoomTime === -1 ? 0 : this.chartDuration / this.maxZoomTime;
 
-        const zoomAction = d3
+        this._zoomHandler = d3
             .zoom()
             .scaleExtent([minScale, maxScale])
             .on('zoom', () => {
@@ -186,7 +186,7 @@ class TimeseriesMultiChart {
                 });
             });
 
-        this.svg.call(zoomAction).on('wheel', function() {
+        this.svg.call(this._zoomHandler).on('wheel', function() {
             d3.event.preventDefault();
         });
     }
@@ -791,8 +791,8 @@ class TimeseriesMultiChart {
      * @param newChartDuration
      */
     setChartDuration(newChartDuration) {
-        this.currentChartDuration = newChartDuration;
-        this.chartDuration = newChartDuration;
+        const scaleFactor = this.chartDuration / newChartDuration;
+        this.svg.call(this._zoomHandler.transform, d3.zoomIdentity.scale(scaleFactor));
 
         this.update();
     }

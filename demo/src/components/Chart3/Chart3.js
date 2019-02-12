@@ -34,6 +34,11 @@ export default class Chart3 extends React.Component {
         this.chart.update(resultDataStreams);
     };
 
+    handleSetDuration = e => {
+        const duration = Number(e.currentTarget.dataset.duration);
+        this.chart.setChartDuration(duration);
+    };
+
     dataStreams = [
         {
             label: 'D1',
@@ -120,6 +125,15 @@ export default class Chart3 extends React.Component {
                                 {d.label}
                             </button>
                         ))}
+                    </div>
+                    <div className="btn-group">
+                        {[['1h', 3600 * 1000], ['2h', 3600 * 1000 * 2], ['3h', 3600 * 1000 * 3]].map(
+                            ([label, duration]) => (
+                                <button key={label} onClick={this.handleSetDuration} data-duration={duration}>
+                                    {label}
+                                </button>
+                            )
+                        )}
                     </div>
                 </div>
             </div>

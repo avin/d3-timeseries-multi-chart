@@ -73,8 +73,11 @@
 .controls {
     position: absolute;
     top: 5px;
-    left: 40px;
+    left: 38px;
+    right: 5px;
     z-index: 5;
+    display: flex;
+    justify-content: space-between;
 
     :global {
         .btn-group button {
