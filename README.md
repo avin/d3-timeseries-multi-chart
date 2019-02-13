@@ -104,7 +104,9 @@ chart.render([
 ### Chart DataStreamsArray item options
 
 -   `data` _(Array)_ **Required** - array of data values. Array item structure: [date: DateTime, value: Number].
--   `color` _(String)_ **Required** - hex color string for data line.
+-   `color` _(String)_ - color string for data line.
+-   `colorFrom` _(String)_ - color for data line gradient fill (gradient from `colorFrom` to `colorTo`).
+-   `colorTo` _(String)_ - color for data line gradient fill.
 -   `label` _(String)_ - dataStream human name.
 -   `showAxis` _(Boolean)_ - show Y axis for current dataStream (default: `true`).
 -   `strokeWidth` _(Number)_ - stroke width of data line (default: `1`).

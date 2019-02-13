@@ -515,6 +515,8 @@ class TimeseriesMultiChart {
                     default:
                 }
 
+                let strokeStyle = this._getDataStreamStrokeStyle(dataStream);
+
                 switch (type) {
                     case 'line': {
                         const line = d3
@@ -529,7 +531,7 @@ class TimeseriesMultiChart {
                             this.canvasChartCtx.beginPath();
                             line(this._filterVisibleDataPoints(data, this.xAxisScale));
                             this.canvasChartCtx.lineWidth = strokeWidth;
-                            this.canvasChartCtx.strokeStyle = color;
+                            this.canvasChartCtx.strokeStyle = strokeStyle;
                             this.canvasChartCtx.stroke();
                         } else {
                             let path = container.select('path');
@@ -539,7 +541,7 @@ class TimeseriesMultiChart {
 
                             path.datum(this._filterVisibleDataPoints(data, this.xAxisScale))
                                 .attr('d', line)
-                                .attr('stroke', color)
+                                .attr('stroke', strokeStyle)
                                 .attr('stroke-width', strokeWidth)
                                 .attr('fill', 'none');
                         }
@@ -556,12 +558,12 @@ class TimeseriesMultiChart {
                         if (this.renderMode === 'canvas') {
                             area.context(this.canvasChartCtx);
 
-                            this.canvasChartCtx.strokeStyle = color;
+                            this.canvasChartCtx.strokeStyle = strokeStyle;
                             this.canvasChartCtx.beginPath();
                             area(this._filterVisibleDataPoints(data, this.xAxisScale));
                             this.canvasChartCtx.save();
                             this.canvasChartCtx.globalAlpha = areaFillOpacity;
-                            this.canvasChartCtx.fillStyle = color;
+                            this.canvasChartCtx.fillStyle = strokeStyle;
                             this.canvasChartCtx.fill();
                             this.canvasChartCtx.restore();
                             this.canvasChartCtx.lineWidth = strokeWidth;
@@ -574,9 +576,9 @@ class TimeseriesMultiChart {
 
                             path.datum(this._filterVisibleDataPoints(data, this.xAxisScale))
                                 .attr('d', area)
-                                .attr('stroke', color)
+                                .attr('stroke', strokeStyle)
                                 .attr('stroke-width', strokeWidth)
-                                .attr('fill', color)
+                                .attr('fill', strokeStyle)
                                 .attr('fill-opacity', areaFillOpacity);
                         }
 
@@ -585,7 +587,7 @@ class TimeseriesMultiChart {
                     case 'bar': {
                         if (this.renderMode === 'canvas') {
                             this._filterVisibleDataPoints(data, this.xAxisScale).forEach(([time, value]) => {
-                                this.canvasChartCtx.fillStyle = color;
+                                this.canvasChartCtx.fillStyle = strokeStyle;
                                 this.canvasChartCtx.fillRect(
                                     this.xAxisScale(+time) - strokeWidth / 2,
                                     yAxisScale(value),
@@ -598,7 +600,7 @@ class TimeseriesMultiChart {
                                 .selectAll('rect')
                                 .data(this._filterVisibleDataPoints(data, this.xAxisScale))
                                 .join('rect')
-                                .attr('fill', color)
+                                .attr('fill', strokeStyle)
                                 .attr('width', strokeWidth)
                                 .attr('x', ([time]) => this.xAxisScale(+time) - strokeWidth / 2)
                                 .attr('y', ([, value]) => yAxisScale(value))
@@ -614,6 +616,25 @@ class TimeseriesMultiChart {
                     default:
                 }
             });
+    }
+
+    _getDataStreamStrokeStyle(dataStream) {
+        const { colorTo, colorFrom } = dataStream;
+        const color = dataStream.color || '#000';
+        let strokeStyle;
+        if (this.renderMode === 'canvas') {
+            strokeStyle = this.canvasChartCtx.createLinearGradient(
+                this.chartWidth / 2,
+                this.chartHeight,
+                this.chartWidth / 2,
+                0,
+            );
+            strokeStyle.addColorStop(0, colorFrom || color);
+            strokeStyle.addColorStop(1, colorTo || color);
+        } else {
+            return color;
+        }
+        return strokeStyle;
     }
 
     /**
@@ -637,6 +658,7 @@ class TimeseriesMultiChart {
                 const dotsRadius = dataStream.dotsRadius || strokeWidth * 2;
 
                 if (showDots) {
+                    const dotsColor = this._getDataStreamStrokeStyle(dataStream);
                     if (this.renderMode === 'canvas') {
                         this._filterVisibleDataPoints(data, this.xAxisScale).forEach(([time, value]) => {
                             this.canvasChartCtx.beginPath();
@@ -648,7 +670,7 @@ class TimeseriesMultiChart {
                                 2 * Math.PI,
                                 true
                             );
-                            this.canvasChartCtx.fillStyle = color;
+                            this.canvasChartCtx.fillStyle = dotsColor;
                             this.canvasChartCtx.fill();
                         });
                     } else {
@@ -657,7 +679,7 @@ class TimeseriesMultiChart {
                             .data(this._filterVisibleDataPoints(data, this.xAxisScale))
                             .join(enter => enter.append('circle').attr('class', 'dataDot'))
                             .attr('r', dotsRadius)
-                            .attr('fill', color)
+                            .attr('fill', dotsColor)
                             .attr('cx', ([time]) => this.xAxisScale(+time))
                             .attr('cy', ([, value]) => yAxisScale(value));
                     }
@@ -684,7 +706,8 @@ class TimeseriesMultiChart {
      */
     _renderTipGroup() {
         this.tipGroup = this.chart.select('.tipGroup');
-        if (this.tipGroup.empty()) {
+        const renderFirstTime = this.tipGroup.empty();
+        if (renderFirstTime) {
             this.tipGroup = this.chart
                 .append('g')
                 .attr('class', 'tipGroup')
@@ -695,23 +718,6 @@ class TimeseriesMultiChart {
                 .attr('class', 'tipMouseLine')
                 .attr('stroke', this.tipStrokeColor)
                 .attr('stroke-width', 2);
-
-            const tipTime = this.tipGroup.append('g').attr('class', 'tipTime');
-
-            tipTime
-                .append('rect')
-                .attr('class', 'tipTimeRect')
-                .attr('x', 0)
-                .attr('y', 0)
-                .attr('width', this.tipTimeWidth)
-                .attr('height', this.timeAxisHeight)
-                .attr('fill', this.tipStrokeColor);
-
-            tipTime
-                .append('text')
-                .attr('class', 'tipTimeText')
-                .attr('text-anchor', 'middle')
-                .attr('transform', `translate(${this.tipTimeWidth / 2}, ${this.timeAxisHeight / 2})`);
         }
 
         this.tipGroup
@@ -736,6 +742,25 @@ class TimeseriesMultiChart {
             )
             .select('.tipCircle')
             .style('stroke', d => d.color);
+
+        if (renderFirstTime) {
+            const tipTime = this.tipGroup.append('g').attr('class', 'tipTime');
+
+            tipTime
+                .append('rect')
+                .attr('class', 'tipTimeRect')
+                .attr('x', 0)
+                .attr('y', 0)
+                .attr('width', this.tipTimeWidth)
+                .attr('height', this.timeAxisHeight)
+                .attr('fill', this.tipStrokeColor);
+
+            tipTime
+                .append('text')
+                .attr('class', 'tipTimeText')
+                .attr('text-anchor', 'middle')
+                .attr('transform', `translate(${this.tipTimeWidth / 2}, ${this.timeAxisHeight / 2})`);
+        }
     }
 
     _callHandler(actionType, ...params) {

@@ -8,6 +8,12 @@ import GitHubLink from './GitHubLink/GitHubLink';
 
 class App extends Component {
     render() {
+        const chartWidth = 500;
+        const chartHeight = 250;
+        const chartCommonProps = {
+            width: chartWidth,
+            height: chartHeight,
+        };
         return (
             <div className={styles.root}>
                 <div className={styles.title}>
@@ -16,12 +22,12 @@ class App extends Component {
                     </h1>
                 </div>
                 <div className={styles.row}>
-                    <Chart1 />
-                    <Chart2 />
+                    <Chart1 {...chartCommonProps} />
+                    <Chart2 {...chartCommonProps} />
                 </div>
                 <div className={styles.row}>
-                    <Chart3 />
-                    <Chart4 />
+                    <Chart3 {...chartCommonProps} />
+                    <Chart4 {...chartCommonProps} />
                 </div>
                 <div className={styles.footer}>
                     <GitHubLink />
