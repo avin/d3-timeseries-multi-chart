@@ -1,0 +1,69 @@
+@import 'src/styles/variables.scss';
+
+.chart{
+    :global{
+        svg {
+
+            .chartLine {
+                fill: none;
+                stroke-width: 2;
+            }
+
+            .dataAxis {
+                text {
+                    paint-order: stroke;
+                    stroke: $light-gray5;
+                    stroke-width: 3px;
+                    stroke-linecap: butt;
+                    stroke-linejoin: miter;
+                    font-weight: 600;
+                }
+            }
+
+            .timeAxis {
+                text {
+                    fill: $dark-gray3;
+                }
+                .domain,
+                .tick line {
+                    stroke: $gray1;
+                }
+            }
+
+            .tipMouseLine,
+            .tipPointerLine {
+                stroke: $gray1;
+                stroke-width: 1px;
+            }
+
+            .tipCircle {
+                stroke-width: 2px;
+                fill: $white;
+            }
+
+            .tipText {
+                transform: translate(8px, 4px);
+                fill: $light-gray5;
+
+                paint-order: stroke;
+                stroke: $gray1;
+                stroke-width: 3px;
+                stroke-linecap: butt;
+                stroke-linejoin: miter;
+                font-weight: 400;
+            }
+
+            .tipTime {
+            }
+
+            .tipTimeRect {
+                fill: $gray1;
+            }
+
+            .tipTimeText {
+                fill: white;
+            }
+        }
+
+    }
+}

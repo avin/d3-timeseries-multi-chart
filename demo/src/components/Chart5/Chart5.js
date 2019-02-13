@@ -4,7 +4,7 @@ import { generateData } from '../../utils/data';
 import styles from './styles.module.scss';
 import cn from 'clsx';
 
-export default class Chart4 extends React.Component {
+export default class Chart5 extends React.Component {
     static defaultProps = {
         width: 600,
         height: 400,
@@ -27,26 +27,34 @@ export default class Chart4 extends React.Component {
                 label: 'Data 1',
                 color: '#1F4B99',
                 data: generateData(Math.PI / 2),
-                showAxis: false,
+                showAxis: true,
                 showDots: true,
+
             },
             {
                 label: 'Data 2',
                 color: '#9BBF30',
+                colorFrom: '#9BBF30',
+                colorTo: '#F00',
                 data: generateData(Math.PI),
-                showAxis: false,
+                showAxis: true,
                 type: 'area',
                 areaFillOpacity: 0.3,
+                scaleRange: [0,50]
+
             },
             {
                 label: 'Data 3',
-                color: '#F5498B',
+                color: '#FFC940',
+                colorFrom: '#FFC940',
+                colorTo: '#F5498B',
+
                 data: generateData(0),
-                showAxis: false,
                 type: 'bar',
                 showDots: true,
                 strokeWidth: 2,
                 dotsRadius: 2.5,
+                scaleRange: [50,100]
             },
         ]);
     }

@@ -44,7 +44,6 @@ export default class Chart3 extends React.Component {
             label: 'D1',
             color: '#F5498B',
             data: generateData(0),
-            showAxis: true,
             curve: 'linear',
             showDots: true,
         },
@@ -52,7 +51,6 @@ export default class Chart3 extends React.Component {
             label: 'D2',
             color: '#43BF4D',
             data: generateData(Math.PI / 2),
-            showAxis: true,
             curve: 'stepAfter',
             showDots: true,
         },
@@ -60,7 +58,6 @@ export default class Chart3 extends React.Component {
             label: 'D3',
             color: '#9179F2',
             data: generateData(Math.PI),
-            showAxis: true,
             curve: 'stepBefore',
             showDots: true,
         },
@@ -68,18 +65,9 @@ export default class Chart3 extends React.Component {
             label: 'D4',
             color: '#B6D94C',
             data: generateData(Math.PI + 0.3),
-            showAxis: true,
             curve: 'monotoneX',
             showDots: true,
         },
-        // {
-        //     label: 'D5',
-        //     color: '#B6D94C',
-        //     data: [],
-        //     showAxis: true,
-        //     curve: 'monotoneX',
-        //     showDots: true,
-        // },
     ];
 
     componentDidMount() {

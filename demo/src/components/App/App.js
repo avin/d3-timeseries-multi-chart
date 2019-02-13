@@ -5,6 +5,7 @@ import Chart2 from '../Chart2/Chart2';
 import Chart3 from '../Chart3/Chart3';
 import Chart4 from '../Chart4/Chart4';
 import GitHubLink from './GitHubLink/GitHubLink';
+import Chart5 from '../Chart5/Chart5';
 
 class App extends Component {
     render() {
@@ -28,6 +29,9 @@ class App extends Component {
                 <div className={styles.row}>
                     <Chart3 {...chartCommonProps} />
                     <Chart4 {...chartCommonProps} />
+                </div>
+                <div className={styles.row}>
+                    <Chart5 {...chartCommonProps} />
                 </div>
                 <div className={styles.footer}>
                     <GitHubLink />

@@ -54,6 +54,8 @@ const defaults = {
 
     // Render mode for data lines (canvas|svg)
     renderMode: 'canvas',
+
+    dataAxisTickHeight: 20,
 };
 
 class TimeseriesMultiChart {
@@ -428,16 +430,21 @@ class TimeseriesMultiChart {
                     const axis = els[idx];
                     const yScale = this.yAxisScales[idx];
 
-                    const { color, showAxis = true } = dataStream;
+                    const { color, showAxis = true, scaleRange = [0, 100] } = dataStream;
                     if (!showAxis) {
                         return;
                     }
 
                     drawCounter += 1;
 
+                    const ticksCount = Math.floor(
+                        (this.chartHeight * (scaleRange[1] / 100) - this.chartHeight * (scaleRange[0] / 100)) /
+                            this.dataAxisTickHeight
+                    );
+
                     d3.select(axis)
                         .attr('transform', `translate(${drawCounter * 30}, 0)`)
-                        .call(d3.axisLeft(yScale))
+                        .call(d3.axisLeft(yScale).ticks(ticksCount))
                         .call(axis => axis.select('.domain').remove())
                         .call(axis => axis.selectAll('line').remove())
                         .call(axis => axis.selectAll('text').attr('fill', color));
@@ -453,10 +460,10 @@ class TimeseriesMultiChart {
         let commonMinValue = Number.MAX_SAFE_INTEGER;
         let commonMaxValue = -Number.MAX_SAFE_INTEGER;
         this.dataStreams.forEach((dataStream, idx) => {
-            const { data } = dataStream;
+            const { data, scaleRange = [0, 100], scaleVisible = false } = dataStream;
 
             let scalingData = data;
-            if (this.autoScale) {
+            if (this.autoScale || scaleVisible) {
                 scalingData = this._filterVisibleDataPoints(data, this.xAxisScale);
             }
 
@@ -464,7 +471,7 @@ class TimeseriesMultiChart {
             const extentPadding = (extent[1] - extent[0]) / this.chartPaddingFactor;
             this.yAxisScales[idx] = d3
                 .scaleLinear()
-                .range([this.chartHeight, 0])
+                .range([this.chartHeight * (scaleRange[1] / 100), this.chartHeight * (scaleRange[0] / 100)])
                 .domain([extent[0] - extentPadding, extent[1] + extentPadding]);
             commonMinValue = Math.min(commonMinValue, extent[0]);
             commonMaxValue = Math.max(commonMaxValue, extent[1]);
@@ -619,15 +626,15 @@ class TimeseriesMultiChart {
     }
 
     _getDataStreamStrokeStyle(dataStream) {
-        const { colorTo, colorFrom } = dataStream;
+        const { colorTo, colorFrom, scaleRange = [0, 100] } = dataStream;
         const color = dataStream.color || '#000';
         let strokeStyle;
         if (this.renderMode === 'canvas') {
             strokeStyle = this.canvasChartCtx.createLinearGradient(
                 this.chartWidth / 2,
-                this.chartHeight,
+                this.chartHeight * (scaleRange[1] / 100),
                 this.chartWidth / 2,
-                0,
+                this.chartHeight * (scaleRange[0] / 100)
             );
             strokeStyle.addColorStop(0, colorFrom || color);
             strokeStyle.addColorStop(1, colorTo || color);

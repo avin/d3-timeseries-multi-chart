@@ -91,6 +91,7 @@ chart.render([
 -   `showMouseTip` _(Boolean)_ - enable on mouseover values display (default: ).
 -   `minZoomTime` _(Number)_ - min limit for zooming (-1 is disabled) (default: `-1`).
 -   `maxZoomTime` _(Number)_ - max limit for zooming (-1 is disabled) (default: `-1`).
+-   `dataAxisTickHeight` _(Number)_ - tick of data axis height (default: `20`).
 
 ### Chart methods
 
@@ -115,6 +116,10 @@ chart.render([
 -   `type` _(String)_ - type of data line (`line` | `area` | `bar`) (default: `line`).
 -   `areaFillOpacity` _(Number)_ - opacity factor for color filling of area data line type.
 -   `curve` _(String)_ - data line curve type (`linear` | `stepAfter` | `stepBefore` | `monotoneX`) (default: `linear`).
+-   `scaleRange` _(array)_ - Scale result range in percents of chart height `[min, max]`. For Example `[0, 50]` - draw
+    data line in bottom part of chart and [50, 100] in top one.
+-   `scaleDomain` _(Array)_ - Custom scale domain `[min, max]`.
+-   `scaleVisible` _(Boolean)_ - Auto scale data line in visible time period.
 
 ### Event handlers params
 

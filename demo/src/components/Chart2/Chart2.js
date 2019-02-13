@@ -29,14 +29,16 @@ export default class Chart2 extends React.Component {
                 data: generateData(0),
                 showAxis: true,
                 strokeWidth: 2,
+                scaleVisible: true,
             },
             {
                 label: 'Data 2',
-                color: '#43BF4D',
-                colorTo: '#FFC940',
+                color: '#669EFF',
+                colorTo: '#DB2C6F',
                 data: generateData(Math.PI / 2),
                 showAxis: true,
                 showDots: true,
+                scaleVisible: true,
             },
             {
                 label: 'Data 3',
