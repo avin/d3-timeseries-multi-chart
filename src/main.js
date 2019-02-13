@@ -430,6 +430,10 @@ class TimeseriesMultiChart {
                     const axis = els[idx];
                     const yScale = this.yAxisScales[idx];
 
+                    if (!yScale) {
+                        return;
+                    }
+
                     const { color, showAxis = true, scaleRange = [0, 100] } = dataStream;
                     if (!showAxis) {
                         return;
@@ -467,6 +471,10 @@ class TimeseriesMultiChart {
                 scalingData = this._filterVisibleDataPoints(data, this.xAxisScale);
             }
 
+            if (!scalingData.length) {
+                return;
+            }
+
             const extent = d3.extent(scalingData, d => d[1]);
             const extentPadding = (extent[1] - extent[0]) / this.chartPaddingFactor;
             this.yAxisScales[idx] = d3
@@ -491,6 +499,10 @@ class TimeseriesMultiChart {
             .each((dataStream, idx, els) => {
                 const container = d3.select(els[idx]);
                 const yAxisScale = this.commonDataAxis ? this.commonYAxisScale : this.yAxisScales[idx];
+
+                if (!yAxisScale) {
+                    return;
+                }
 
                 const {
                     color,
@@ -661,6 +673,10 @@ class TimeseriesMultiChart {
                 const group = els[idx];
                 const yAxisScale = this.commonDataAxis ? this.commonYAxisScale : this.yAxisScales[idx];
 
+                if (!yAxisScale) {
+                    return;
+                }
+
                 const { color, data, strokeWidth = 1, showDots = false } = dataStream;
                 const dotsRadius = dataStream.dotsRadius || strokeWidth * 2;
 
@@ -788,14 +804,19 @@ class TimeseriesMultiChart {
 
         this.canvasChartCtx.clearRect(0, 0, this.chartWidth, this.chartHeight);
 
-        this.maxTime = Number.MAX_SAFE_INTEGER * -1;
-        this.minTime = Number.MAX_SAFE_INTEGER;
+        if (this.dataStreams.length) {
+            this.maxTime = Number.MAX_SAFE_INTEGER * -1;
+            this.minTime = Number.MAX_SAFE_INTEGER;
 
-        this.dataStreams.forEach(({ data }) => {
-            const timeExtent = d3.extent(data, d => d[0]);
-            this.minTime = Math.min(timeExtent[0], this.minTime);
-            this.maxTime = Math.max(timeExtent[1], this.maxTime);
-        });
+            this.dataStreams.forEach(({ data }) => {
+                const timeExtent = d3.extent(data, d => d[0]);
+                this.minTime = Math.min(timeExtent[0], this.minTime);
+                this.maxTime = Math.max(timeExtent[1], this.maxTime);
+            });
+        } else {
+            this.minTime = +new Date() - 3600 * 1000;
+            this.maxTime = +new Date();
+        }
 
         if (this.lastChartTime === undefined) {
             this.lastChartTime = this.maxTime;
