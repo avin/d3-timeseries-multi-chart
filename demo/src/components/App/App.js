@@ -9,7 +9,7 @@ import Chart5 from '../Chart5/Chart5';
 
 class App extends Component {
     render() {
-        const chartWidth = 500;
+        const chartWidth = 450;
         const chartHeight = 250;
         const chartCommonProps = {
             width: chartWidth,

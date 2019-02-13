@@ -464,7 +464,7 @@ class TimeseriesMultiChart {
         let commonMinValue = Number.MAX_SAFE_INTEGER;
         let commonMaxValue = -Number.MAX_SAFE_INTEGER;
         this.dataStreams.forEach((dataStream, idx) => {
-            const { data, scaleRange = [0, 100], scaleVisible = false } = dataStream;
+            const { data, scaleRange = [0, 100], scaleVisible = false, scaleDomain } = dataStream;
 
             let scalingData = data;
             if (this.autoScale || scaleVisible) {
@@ -475,7 +475,7 @@ class TimeseriesMultiChart {
                 return;
             }
 
-            const extent = d3.extent(scalingData, d => d[1]);
+            const extent = scaleDomain || d3.extent(scalingData, d => d[1]);
             const extentPadding = (extent[1] - extent[0]) / this.chartPaddingFactor;
             this.yAxisScales[idx] = d3
                 .scaleLinear()
