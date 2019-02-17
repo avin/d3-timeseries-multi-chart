@@ -632,8 +632,9 @@ class TimeseriesMultiChart {
     }
 
     _getDataStreamStrokeStyle(dataStream) {
-        const { colorTo, colorFrom, scaleRange = [0, 100] } = dataStream;
+        const { scaleRange = [0, 100] } = dataStream;
         const color = dataStream.color || '#000';
+        const colorGradient = dataStream.colorGradient || [color, color];
         let strokeStyle;
         if (this.renderMode === 'canvas') {
             strokeStyle = this.canvasChartCtx.createLinearGradient(
@@ -642,8 +643,10 @@ class TimeseriesMultiChart {
                 this.chartWidth / 2,
                 this.chartHeight * (scaleRange[0] / 100),
             );
-            strokeStyle.addColorStop(0, colorFrom || color);
-            strokeStyle.addColorStop(1, colorTo || color);
+
+            colorGradient.forEach((color, idx) => {
+                strokeStyle.addColorStop(idx / (colorGradient.length - 1), color);
+            });
         } else {
             return color;
         }

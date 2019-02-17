@@ -33,9 +33,8 @@ export default class Chart5 extends React.Component {
             },
             {
                 label: 'Data 2',
-                color: '#9BBF30',
-                colorFrom: '#9BBF30',
-                colorTo: '#F00',
+                color: '#D3435C',
+                colorGradient: ['#D3435C', '#ED9D00', '#23C48E'],
                 data: generateData(Math.PI),
                 showAxis: true,
                 type: 'area',
@@ -45,9 +44,8 @@ export default class Chart5 extends React.Component {
             },
             {
                 label: 'Data 3',
-                color: '#FFC940',
-                colorFrom: '#FFC940',
-                colorTo: '#F5498B',
+                color: '#23C48E',
+                colorGradient: ['#23C48E', '#04C0F8', '#5F7CD8'],
 
                 data: generateData(0),
                 type: 'bar',

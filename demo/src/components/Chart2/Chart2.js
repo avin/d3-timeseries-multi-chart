@@ -25,7 +25,7 @@ export default class Chart2 extends React.Component {
             {
                 label: 'Data 1',
                 color: '#F5498B',
-                colorTo: '#FFC940',
+                colorGradient: ['#F5498B', '#FFC940'],
                 data: generateData(0),
                 showAxis: true,
                 strokeWidth: 2,
@@ -34,7 +34,7 @@ export default class Chart2 extends React.Component {
             {
                 label: 'Data 2',
                 color: '#669EFF',
-                colorTo: '#DB2C6F',
+                colorGradient: ['#669EFF','#DB2C6F'],
                 data: generateData(Math.PI / 2),
                 showAxis: true,
                 showDots: true,
