@@ -19,6 +19,7 @@ module.exports = {
             'error',
             { devDependencies: ['**/*.test.js', '**/*.spec.js', '**/test/*.js', '**/__tests__/*.js'] },
         ],
+        "no-underscore-dangle": ["error", { "allowAfterThis": true }],
         'no-param-reassign': 'off',
         'class-methods-use-this': 'off',
         'no-shadow': 'off',

@@ -107,7 +107,7 @@ class TimeseriesMultiChart {
                 .append('canvas')
                 .style('position', 'absolute')
                 .style('top', 0)
-                .style('left', (this.commonDataAxis ? this.commonDataAxisWidth : 0) + 'px')
+                .style('left', `${this.commonDataAxis ? this.commonDataAxisWidth : 0}px`)
                 .attr('width', chartWidth)
                 .attr('height', chartHeight);
             this.canvasChartCtx = this.canvasChart.node().getContext('2d');
@@ -312,7 +312,7 @@ class TimeseriesMultiChart {
         this.tipGroup
             .select(`.tipMouseLine`)
             .attr('d', () =>
-                d3.line()([[mouseX, this.height - (this.showTimeAxis ? this.timeAxisHeight : 0)], [mouseX, 0]])
+                d3.line()([[mouseX, this.height - (this.showTimeAxis ? this.timeAxisHeight : 0)], [mouseX, 0]]),
             );
 
         let positionX = mouseX - this.tipTimeWidth / 2;
@@ -378,7 +378,7 @@ class TimeseriesMultiChart {
                         d3.line()([
                             [-3, 0],
                             [Math.min(-3, this.xAxisScale(tipNode.date) - mouseX), tipNode.targetY - tipNode.y],
-                        ])
+                        ]),
                     );
             } else {
                 d3.select(els[idx]).attr('transform', `translate(-999,-999)`);
@@ -443,7 +443,7 @@ class TimeseriesMultiChart {
 
                     const ticksCount = Math.floor(
                         (this.chartHeight * (scaleRange[1] / 100) - this.chartHeight * (scaleRange[0] / 100)) /
-                            this.dataAxisTickHeight
+                            this.dataAxisTickHeight,
                     );
 
                     d3.select(axis)
@@ -477,6 +477,7 @@ class TimeseriesMultiChart {
 
             const extent = scaleDomain || d3.extent(scalingData, d => d[1]);
             const extentPadding = (extent[1] - extent[0]) / this.chartPaddingFactor;
+
             this.yAxisScales[idx] = d3
                 .scaleLinear()
                 .range([this.chartHeight * (scaleRange[1] / 100), this.chartHeight * (scaleRange[0] / 100)])
@@ -494,7 +495,7 @@ class TimeseriesMultiChart {
                 enter
                     .append('g')
                     .attr('class', 'dataLine')
-                    .attr('clip-path', 'url(#chart-clip)')
+                    .attr('clip-path', 'url(#chart-clip)'),
             )
             .each((dataStream, idx, els) => {
                 const container = d3.select(els[idx]);
@@ -504,14 +505,7 @@ class TimeseriesMultiChart {
                     return;
                 }
 
-                const {
-                    color,
-                    data,
-                    strokeWidth = 1,
-                    type = 'line',
-                    areaFillOpacity = 0.5,
-                    curve = 'linear',
-                } = dataStream;
+                const { data, strokeWidth = 1, type = 'line', areaFillOpacity = 0.5, curve = 'linear' } = dataStream;
 
                 let curveFunc = d3.curveLinear;
                 switch (curve) {
@@ -534,7 +528,7 @@ class TimeseriesMultiChart {
                     default:
                 }
 
-                let strokeStyle = this._getDataStreamStrokeStyle(dataStream);
+                const strokeStyle = this._getDataStreamStrokeStyle(dataStream);
 
                 switch (type) {
                     case 'line': {
@@ -611,7 +605,7 @@ class TimeseriesMultiChart {
                                     this.xAxisScale(+time) - strokeWidth / 2,
                                     yAxisScale(value),
                                     strokeWidth,
-                                    this.height - (this.showTimeAxis ? this.timeAxisHeight : 0) - yAxisScale(value)
+                                    this.height - (this.showTimeAxis ? this.timeAxisHeight : 0) - yAxisScale(value),
                                 );
                             });
                         } else {
@@ -626,7 +620,7 @@ class TimeseriesMultiChart {
                                 .attr(
                                     'height',
                                     ([, value]) =>
-                                        this.height - (this.showTimeAxis ? this.timeAxisHeight : 0) - yAxisScale(value)
+                                        this.height - (this.showTimeAxis ? this.timeAxisHeight : 0) - yAxisScale(value),
                                 );
                         }
 
@@ -646,7 +640,7 @@ class TimeseriesMultiChart {
                 this.chartWidth / 2,
                 this.chartHeight * (scaleRange[1] / 100),
                 this.chartWidth / 2,
-                this.chartHeight * (scaleRange[0] / 100)
+                this.chartHeight * (scaleRange[0] / 100),
             );
             strokeStyle.addColorStop(0, colorFrom || color);
             strokeStyle.addColorStop(1, colorTo || color);
@@ -667,7 +661,7 @@ class TimeseriesMultiChart {
                 enter
                     .append('g')
                     .attr('class', 'dataDotsGroup')
-                    .attr('clip-path', 'url(#chart-clip)')
+                    .attr('clip-path', 'url(#chart-clip)'),
             )
             .each((dataStream, idx, els) => {
                 const group = els[idx];
@@ -677,7 +671,7 @@ class TimeseriesMultiChart {
                     return;
                 }
 
-                const { color, data, strokeWidth = 1, showDots = false } = dataStream;
+                const { data, strokeWidth = 1, showDots = false } = dataStream;
                 const dotsRadius = dataStream.dotsRadius || strokeWidth * 2;
 
                 if (showDots) {
@@ -691,7 +685,7 @@ class TimeseriesMultiChart {
                                 dotsRadius,
                                 0,
                                 2 * Math.PI,
-                                true
+                                true,
                             );
                             this.canvasChartCtx.fillStyle = dotsColor;
                             this.canvasChartCtx.fill();
@@ -757,11 +751,11 @@ class TimeseriesMultiChart {
 
                                 .append('circle')
                                 .attr('class', 'tipCircle')
-                                .attr('r', 4)
+                                .attr('r', 4),
                         )
                         .call(g => g.append('text').attr('class', 'tipText')),
                 enter => enter.select('.tipCircle'),
-                exit => exit.remove()
+                exit => exit.remove(),
             )
             .select('.tipCircle')
             .style('stroke', d => d.color);
